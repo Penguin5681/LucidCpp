@@ -3,16 +3,17 @@
 
 int main()
 {
-    ListNode* rootNode = new ListNode(1);
+	ListNode *rootNode = new ListNode(1);
 
-    for (int i = 2; i != 11; i++) {
-        insertAtEnd(rootNode, i);
-    }
+	for (int i = 2; i != 11; i++)
+	{
+		insertAtEnd(rootNode, i);
+	}
 
 	vis::explore("meow meow. The libray is working");
 	// vis::exploreList(rootNode);
-    vis::exploreListAddressing(rootNode);
+	vis::exploreListAddressing(rootNode);
 
-    vis::writeListDotFile(rootNode, "list.dot");
+	vis::writeListDotFile(rootNode, "list.dot");
 	return 0;
 }

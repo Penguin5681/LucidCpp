@@ -3,3 +3,5 @@ build/
 TEMP.md
 *.txt
 *.dot
+*.svg
+*.html
