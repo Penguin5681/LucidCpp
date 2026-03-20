@@ -12,8 +12,12 @@ int main()
 
 	vis::explore("meow meow. The libray is working");
 	// vis::exploreList(rootNode);
-	vis::exploreListAddressing(rootNode);
+	// vis::exploreListAddressing(rootNode);
 
-	vis::writeListDotFile(rootNode, "list.dot");
+	// vis::writeListDotFile(rootNode, "list.dot");
+	std::cout << vis::buildHTMLTemplate();
+
+	vis::writeListHTMLFile(rootNode, "index.html");
+
 	return 0;
 }
