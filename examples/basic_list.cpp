@@ -15,8 +15,6 @@ int main()
 	// vis::exploreListAddressing(rootNode);
 
 	// vis::writeListDotFile(rootNode, "list.dot");
-	std::cout << vis::buildHTMLTemplate();
-
 	vis::writeListHTMLFile(rootNode, "index.html");
 
 	return 0;

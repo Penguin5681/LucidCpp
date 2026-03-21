@@ -124,25 +124,6 @@ namespace vis
 		return;
 	}
 
-	inline std::string buildHTMLTemplate() {
-		return R"(
-			<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<title>Linked List Render</title>
-				<script src="https://cdn.jsdelivr.net/npm/vis-network@10.0.2/standalone/umd/vis-network.min.js"></script>
-			</head>
-			<body>
-				<p> meow meow </p>
-				<script type="text/javascript">
-				</script>
-			</body>
-			</html>
-		)";
-	}
-
 	inline std::pair<std::string, std::string> getNodesEdgesJson(ListNode* rootNode) {
 		std::stringstream nodesJson;
 		std::stringstream edgesJson;
@@ -150,32 +131,220 @@ namespace vis
 		nodesJson << "[\n";
 		edgesJson << "[\n";
 		
-		bool isRootNode = true;
+		bool isFirstNode = true;
+    	bool isFirstEdge = true;
 		for (auto it = rootNode; it != nullptr; it = it->next)
 		{
-			if (!isRootNode) {
-				nodesJson << ",\n";
-				edgesJson << ",\n";
-			}
-
-			std::string nodeAddr = getNodeAddress(it);
-			nodesJson << "  { \"id\": \"" << nodeAddr << "\", \"label\": \"" << it->data << "\" }";
+			if (!isFirstNode) nodesJson << ",\n";
+			nodesJson << "  { \"id\": \"" << getNodeAddress(it) << "\", \"label\": \"" << it->data << "\" }";
+			isFirstNode = false;
 
 			if (it->next != nullptr)
 			{
-				std::string nextAddr = getNodeAddress(it->next);
-				edgesJson << "  { \"from\": \"" << nodeAddr << "\", \"to\": \"" << nextAddr << "\" }";
+				if (!isFirstEdge) edgesJson << ",\n";
+				edgesJson << "  { \"from\": \"" << getNodeAddress(it) << "\", \"to\": \"" << getNodeAddress(it->next) << "\" }";
+				isFirstEdge = false;
 			}
-
-			isRootNode = false;
 		}
-		
+
 		nodesJson << "\n]";
 		edgesJson << "\n]"; 
 		
 		return std::make_pair(nodesJson.str(), edgesJson.str());
 	}
 
+inline std::string getHtmlTemplate(const std::string& nodesJson, const std::string& edgesJson) {
+        return R"(
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Linked List Render</title>
+                <style>
+                    :root {
+                        --bg: #f5f2ea;
+                        --ink: #1b1b1b;
+                        --accent: #e07a5f;
+                        --panel: #fff7e8;
+                        --border: #2f2f2f;
+                    }
+                    * { box-sizing: border-box; }
+                    body {
+                        margin: 0;
+                        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+                        background: radial-gradient(1200px 800px at 20% 10%, #fff2d8, var(--bg));
+                        color: var(--ink);
+                    }
+                    .header {
+                        padding: 20px 24px 8px;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 20px;
+                        letter-spacing: 1px;
+                        text-transform: uppercase;
+                    }
+                    .header p {
+                        margin: 6px 0 0;
+                        font-size: 13px;
+                        opacity: 0.75;
+                    }
+                    #list {
+                        display: flex;
+                        align-items: center;
+                        gap: 18px;
+                        padding: 40px 24px 32px; /* Increased top padding to make room for tooltip */
+                        overflow-x: auto;
+                        min-height: 200px;
+                    }
+                    .node {
+                        position: relative;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        min-width: 200px; /* Slightly wider to accommodate hex strings */
+                        border: 2px solid var(--border);
+                        background: var(--panel);
+                        box-shadow: 6px 6px 0 #2f2f2f22;
+                        transform: translateY(0);
+                        transition: transform 160ms ease, box-shadow 160ms ease;
+                    }
+                    .node:hover {
+                        transform: translateY(-4px);
+                        box-shadow: 10px 10px 0 #2f2f2f22;
+                    }
+                    /* NEW: The floating tooltip for the current address */
+                    .current-addr {
+                        position: absolute;
+                        top: -30px;
+                        left: 50%;
+                        transform: translateX(-50%) translateY(5px);
+                        background: var(--ink);
+                        color: var(--bg);
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        font-family: monospace;
+                        opacity: 0;
+                        pointer-events: none;
+                        transition: opacity 160ms ease, transform 160ms ease;
+                        white-space: nowrap;
+                    }
+                    /* Show tooltip on node hover */
+                    .node:hover .current-addr {
+                        opacity: 1;
+                        transform: translateX(-50%) translateY(0);
+                    }
+                    .block {
+                        padding: 12px 14px;
+                        border-right: 2px solid var(--border);
+                        min-height: 70px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        max-width: 120px; /* Force a max width so it wraps */
+                    }
+                    .block:last-child {
+                        border-right: none;
+                    }
+                    .label {
+                        font-size: 11px;
+                        letter-spacing: 1px;
+                        text-transform: uppercase;
+                        opacity: 0.6;
+                    }
+                    .value {
+                        margin-top: 6px;
+                        font-size: 15px;
+                        font-weight: 600;
+                        word-break: break-word; /* Prevents massive data from overflowing */
+                    }
+                    .next-value {
+                        display: inline-block;
+                        padding: 4px 6px;
+                        border: 1px dashed var(--border);
+                        background: #fff;
+                        opacity: 0;
+                        font-family: monospace; /* Monospace looks better for hex */
+                        font-size: 11px; /* Shrink address text */
+                        word-break: break-all; /* CRITICAL: forces the hex string to wrap to the next line */
+                        transform: translateY(4px);
+                        transition: opacity 140ms ease, transform 140ms ease;
+                    }
+                    .node:hover .next-value {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                    .arrow {
+                        font-size: 20px;
+                        color: var(--accent);
+                    }
+                    .tail {
+                        font-weight: 600;
+                        padding: 10px 14px;
+                        border: 2px dashed var(--border);
+                        background: #fff;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Linked List</h1>
+                    <p>Hover a node to reveal its memory address and next pointer.</p>
+                </div>
+                <div id="list"></div>
+                <script type="text/javascript">
+                    const nodes = )" + nodesJson + R"(;
+                    const edges = )" + edgesJson + R"(;
+                    
+                    const nextMap = new Map();
+                    for (const edge of edges) {
+                        nextMap.set(edge.from, edge.to);
+                    }
+
+                    const listEl = document.getElementById('list');
+                    for (let i = 0; i < nodes.length; i++) {
+                        const node = nodes[i];
+                        const nextAddr = nextMap.get(node.id) || 'NULL';
+
+                        const card = document.createElement('div');
+                        card.className = 'node';
+
+                        // NEW: Create and append the current address tooltip
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'current-addr';
+                        tooltip.textContent = 'Addr: ' + node.id;
+                        card.appendChild(tooltip);
+
+                        const dataBlock = document.createElement('div');
+                        dataBlock.className = 'block';
+                        dataBlock.innerHTML = '<span class="label">data</span><span class="value">' + node.label + '</span>';
+
+                        const nextBlock = document.createElement('div');
+                        nextBlock.className = 'block';
+                        nextBlock.innerHTML = '<span class="label">next</span><span class="value next-value">' + nextAddr + '</span>';
+
+                        card.appendChild(dataBlock);
+                        card.appendChild(nextBlock);
+                        listEl.appendChild(card);
+
+                        if (i < nodes.length - 1) {
+                            const arrow = document.createElement('div');
+                            arrow.className = 'arrow';
+                            arrow.textContent = '\u2192';
+                            listEl.appendChild(arrow);
+                        }
+                    }
+
+                    const tail = document.createElement('div');
+                    tail.className = 'tail';
+                    tail.textContent = 'NULL';
+                    listEl.appendChild(tail);
+                </script>
+            </body>
+            </html>
+        )";
+    }
 	// NOTE: This will output a .html file containing the renderable content
 	// opened in browser ofc
 
@@ -186,35 +355,7 @@ namespace vis
 		const std::string& nodesJson = nodesEdgesJson.first;
 		const std::string& edgesJson = nodesEdgesJson.second;
 
-		std::string htmlContent = R"(
-			<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<title>Linked List Render</title>
-				<script src="https://cdn.jsdelivr.net/npm/vis-network@10.0.2/standalone/umd/vis-network.min.js"></script>
-			</head>
-			<body>
-				<div id="network" style="width: 100%; height: 100vh;"></div>
-				<script type="text/javascript">
-					var nodes = new vis.DataSet()" + nodesJson + R"();
-					var edges = new vis.DataSet()" + edgesJson + R"();
-					var container = document.getElementById('network');
-					var data = { nodes: nodes, edges: edges };
-					var options = {
-						physics: false,
-						interaction: {
-							dragNodes: true,
-							dragView: true,
-							zoomView: true
-						}
-					};
-					var network = new vis.Network(container, data, options);
-				</script>
-			</body>
-			</html>
-		)";
+		std::string htmlContent = getHtmlTemplate(nodesJson, edgesJson);
 
 		std::ofstream out(path);
 		out << htmlContent;
