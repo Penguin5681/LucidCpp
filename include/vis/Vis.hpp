@@ -9,6 +9,7 @@
 #include <vector>
 #include <concepts>
 #include <unordered_set>
+#include <queue>
 
 #include "../DSHeaders/ListNode.hpp"
 
@@ -55,7 +56,8 @@ namespace vis
 		std::cout << std::endl;
 	}
 
-	inline std::string getNodeAddress(const void *node)
+    template <typename T>
+	inline std::string getNodeAddress(T *node)
 	{
 		std::stringstream ss;
 		ss << "0x" << std::hex << reinterpret_cast<uintptr_t>(node);
@@ -135,8 +137,57 @@ namespace vis
 		return;
 	}
 
-    template <typename T, typename DataFunc, typename NextFunc>
-	inline std::pair<std::string, std::string> getNodesEdgesJson(T* rootNode, DataFunc getData, NextFunc getNext) {
+    template <typename T, typename DataFunc, typename ChildrenFunc>
+    inline std::pair<std::string, std::string> getTreeEdgesJson(T* rootNode, DataFunc getData, ChildrenFunc getChildren) {
+        std::unordered_set<const void*> visitedNodes;
+        std::queue<T*> q;
+        std::stringstream nodesJson;
+        std::stringstream edgesJson;
+
+        nodesJson << "[\n"; edgesJson << "[\n";
+        bool isFirstNode = true;
+        bool isFirstEdge = true;
+
+        if (rootNode != nullptr) {
+            q.push(rootNode);
+            visitedNodes.insert(rootNode);
+        }
+
+        while (!q.empty()) {
+            T* current = q.front();
+            q.pop();
+
+            // FIX 1: Add comma for Nodes
+            if (!isFirstNode) nodesJson << ",\n";
+            nodesJson << "  { \"id\": \"" << getNodeAddress(current) << "\", \"label\": \"" << getData(current) << "\" }";
+            isFirstNode = false;
+
+            std::vector<T*> children = getChildren(current);
+            for (T* child : children) {
+                if (child == nullptr) {
+                    continue;
+                }
+                
+                // FIX 2: Add comma for Edges
+                if (!isFirstEdge) edgesJson << ",\n";
+                edgesJson << "  { \"from\": \"" << getNodeAddress(current) << "\", \"to\": \"" << getNodeAddress(child) << "\" }";
+                isFirstEdge = false;
+
+                if (visitedNodes.find(child) == visitedNodes.end()) {
+                    visitedNodes.insert(child);
+                    q.push(child);
+                }
+            }
+        }
+
+        nodesJson << "\n]";
+        edgesJson << "\n]";
+        
+        return std::make_pair(nodesJson.str(), edgesJson.str());
+    }
+
+    template <typename T, typename DataFunc, typename ChildrenFunc>
+	inline std::pair<std::string, std::string> getNodesEdgesJson(T* rootNode, DataFunc getData, ChildrenFunc getChildren) {
         std::unordered_set<const void*> visitedNodes;
 		std::stringstream nodesJson;
 		std::stringstream edgesJson;
@@ -147,7 +198,7 @@ namespace vis
 		bool isFirstNode = true;
     	bool isFirstEdge = true;
         bool isCycle = false;
-		for (auto it = rootNode; it != nullptr; it = getNext(it))
+		for (auto it = rootNode; it != nullptr; it = getChildren(it))
 		{
             if (visitedNodes.find(it) != visitedNodes.end()) {
                 isCycle = true;
@@ -157,10 +208,10 @@ namespace vis
 			nodesJson << "  { \"id\": \"" << getNodeAddress(it) << "\", \"label\": \"" << getData(it) << "\" }";
 			isFirstNode = false;
 
-			if (getNext(it) != nullptr)
+			if (getChildren(it) != nullptr)
 			{
 				if (!isFirstEdge) edgesJson << ",\n";
-				edgesJson << "  { \"from\": \"" << getNodeAddress(it) << "\", \"to\": \"" << getNodeAddress(getNext(it)) << "\" }";
+				edgesJson << "  { \"from\": \"" << getNodeAddress(it) << "\", \"to\": \"" << getNodeAddress(getChildren(it)) << "\" }";
 				isFirstEdge = false;
 			}
             visitedNodes.insert(it);
@@ -176,7 +227,7 @@ namespace vis
 		return std::make_pair(nodesJson.str(), edgesJson.str());
 	}
 
-    inline std::string getHtmlTemplate(const std::string& nodesJson, const std::string& edgesJson) {
+    inline std::string getListHtmlTemplate(const std::string& nodesJson, const std::string& edgesJson) {
         return R"(
             <!DOCTYPE html>
             <html lang="en">
@@ -391,6 +442,222 @@ namespace vis
 	// NOTE: This will output a .html file containing the renderable content
 	// opened in browser ofc
 
+    inline std::string getTreeHtmlTemplate(const std::string& nodesJson, const std::string& edgesJson) {
+        return R"(
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Tree Render</title>
+                <style>
+                    :root {
+                        --bg: #f5f2ea;
+                        --ink: #1b1b1b;
+                        --accent: #e07a5f;
+                        --panel: #fff7e8;
+                        --border: #2f2f2f;
+                    }
+                    * { box-sizing: border-box; }
+                    body {
+                        margin: 0;
+                        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+                        background: radial-gradient(1200px 800px at 20% 10%, #fff2d8, var(--bg));
+                        color: var(--ink);
+                    }
+                    .header {
+                        padding: 20px 24px 8px;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 20px;
+                        letter-spacing: 1px;
+                        text-transform: uppercase;
+                    }
+                    .header p {
+                        margin: 6px 0 0;
+                        font-size: 13px;
+                        opacity: 0.75;
+                    }
+                    #tree {
+                        padding: 40px 24px;
+                        overflow: auto;
+                        min-height: 600px;
+                        display: flex;
+                        justify-content: center;
+                    }
+                    .tree-container {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 40px;
+                    }
+                    .tree-node {
+                        position: relative;
+                        display: inline-block;
+                        padding: 12px 16px;
+                        border: 2px solid var(--border);
+                        background: var(--panel);
+                        box-shadow: 6px 6px 0 #2f2f2f22;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        transition: all 160ms ease;
+                        max-width: 180px;
+                        word-wrap: break-word;
+                    }
+                    .tree-node:hover {
+                        transform: translateY(-4px);
+                        box-shadow: 10px 10px 0 #2f2f2f22;
+                        background: #fffbf0;
+                    }
+                    .tree-node .label {
+                        font-size: 10px;
+                        opacity: 0.6;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    }
+                    .tree-node .value {
+                        font-size: 14px;
+                        font-weight: 600;
+                        margin-top: 4px;
+                    }
+                    .tree-level {
+                        display: flex;
+                        justify-content: center;
+                        gap: 30px;
+                        flex-wrap: wrap;
+                    }
+                    .tree-branch {
+                        position: relative;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                    }
+                    svg.connector {
+                        position: absolute;
+                        pointer-events: none;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Tree Structure</h1>
+                    <p>Interactive visualization of tree nodes and their connections.</p>
+                </div>
+                <div id="tree"></div>
+                <script type="text/javascript">
+                    const nodes = )" + nodesJson + R"(;
+                    const edges = )" + edgesJson + R"(;
+                    
+                    // Build adjacency map
+                    const childrenMap = new Map();
+                    for (const edge of edges) {
+                        if (!childrenMap.has(edge.from)) {
+                            childrenMap.set(edge.from, []);
+                        }
+                        childrenMap.has(edge.to) || childrenMap.set(edge.to, []);
+                        childrenMap.get(edge.from).push(edge.to);
+                    }
+
+                    // Build tree levels using BFS
+                    const levels = [];
+                    const nodeMap = new Map(nodes.map(n => [n.id, n]));
+                    const visited = new Set();
+                    
+                    if (nodes.length > 0) {
+                        const queue = [[nodes[0].id, 0]];
+                        visited.add(nodes[0].id);
+                        
+                        while (queue.length > 0) {
+                            const [nodeId, level] = queue.shift();
+                            if (!levels[level]) levels[level] = [];
+                            levels[level].push(nodeId);
+                            
+                            const children = childrenMap.get(nodeId) || [];
+                            for (const childId of children) {
+                                if (!visited.has(childId)) {
+                                    visited.add(childId);
+                                    queue.push([childId, level + 1]);
+                                }
+                            }
+                        }
+                    }
+
+                    // Render tree
+                    const treeEl = document.getElementById('tree');
+                    const container = document.createElement('div');
+                    container.className = 'tree-container';
+                    treeEl.appendChild(container);
+
+                    for (const level of levels) {
+                        const levelDiv = document.createElement('div');
+                        levelDiv.className = 'tree-level';
+                        
+                        for (const nodeId of level) {
+                            const node = nodeMap.get(nodeId);
+                            const nodeEl = document.createElement('div');
+                            nodeEl.className = 'tree-node';
+                            nodeEl.innerHTML = `<div class="label">Data</div><div class="value">${node.label}</div>`;
+                            nodeEl.title = `Address: ${node.id}`;
+                            levelDiv.appendChild(nodeEl);
+                        }
+                        
+                        container.appendChild(levelDiv);
+                    }
+                </script>
+            </body>
+            </html>
+        )";
+    }
+
+    template <typename T, typename DataFunc, typename ChildrenFunc>
+    inline void writeTreeHTMLFile(
+        T* rootNode, 
+        const std::string &path,
+        DataFunc getData,
+        ChildrenFunc getChildren
+    ) 
+    {
+        std::pair<std::string, std::string> nodesEdgesJson = getTreeEdgesJson(
+            rootNode, 
+            getData,
+            getChildren
+        );
+
+        const std::string& nodesJson = nodesEdgesJson.first;
+        const std::string& edgesJson = nodesEdgesJson.second;
+
+        std::string htmlContent = getTreeHtmlTemplate(nodesJson, edgesJson);
+
+        std::ofstream out(path);
+        out << htmlContent;
+        out.close();
+
+        std::cout << "The tree html file has been written to: " << path << std::endl;
+
+        std::string launchCommand = "";
+        int osType = osdetecter::OsType();
+
+        switch (osType) {
+			case 0:
+                launchCommand += "start " + path;
+				break;
+			case 1:
+				launchCommand += "google-chrome " + path;
+				break;
+			case 2:
+                launchCommand += "xdg-open " + path;
+				break;
+			case 3:
+				break;
+			default:
+				break;
+		}
+
+        std::system(launchCommand.c_str());
+        return;
+    }
+
     template <LinearNode T>
 	inline void writeListHTMLFile(T *rootNode, const std::string &path)
 	{
@@ -398,19 +665,19 @@ namespace vis
                                           [](T *node) { return node->next; });
 	}
 
-    template <typename T, typename DataFunc, typename NextFunc>
-    inline void writeListHTMLFile(T* rootNode, const std::string &path, DataFunc getData, NextFunc getNext) 
+    template <typename T, typename DataFunc, typename ChildrenFunc>
+    inline void writeListHTMLFile(T* rootNode, const std::string &path, DataFunc getData, ChildrenFunc getChildren) 
     {
         std::pair<std::string, std::string> nodesEdgesJson = getNodesEdgesJson(
             rootNode,
             getData,
-            getNext
+            getChildren
         );
 
 		const std::string& nodesJson = nodesEdgesJson.first;
 		const std::string& edgesJson = nodesEdgesJson.second;
 
-		std::string htmlContent = getHtmlTemplate(nodesJson, edgesJson);
+		std::string htmlContent = getListHtmlTemplate(nodesJson, edgesJson);
 
 		std::ofstream out(path);
 		out << htmlContent;
