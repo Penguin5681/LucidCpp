@@ -39,6 +39,10 @@ namespace vis
         { node.data };
         { node.next } -> std::convertible_to<T*>;
     };
+    // TODO: Figure out cycle detection
+    // TODO: Define Binary Tree Node Concept
+    // TODO: Define Generic Tree Node Concept
+    // TODO: Figure out the concept for graphs
 
 	inline void exploreStructure(ListNode *rootNode)
 	{
@@ -51,7 +55,7 @@ namespace vis
 		std::cout << std::endl;
 	}
 
-	inline std::string getNodeAddress(ListNode *node)
+	inline std::string getNodeAddress(const void *node)
 	{
 		std::stringstream ss;
 		ss << "0x" << std::hex << reinterpret_cast<uintptr_t>(node);
@@ -131,8 +135,8 @@ namespace vis
 		return;
 	}
 
-    template <typename T>
-	inline std::pair<std::string, std::string> getNodesEdgesJson(T* rootNode) {
+    template <typename T, typename DataFunc, typename NextFunc>
+	inline std::pair<std::string, std::string> getNodesEdgesJson(T* rootNode, DataFunc getData, NextFunc getNext) {
 		std::stringstream nodesJson;
 		std::stringstream edgesJson;
 		
@@ -141,16 +145,16 @@ namespace vis
 		
 		bool isFirstNode = true;
     	bool isFirstEdge = true;
-		for (auto it = rootNode; it != nullptr; it = it->next)
+		for (auto it = rootNode; it != nullptr; it = getNext(it))
 		{
 			if (!isFirstNode) nodesJson << ",\n";
-			nodesJson << "  { \"id\": \"" << getNodeAddress(it) << "\", \"label\": \"" << it->data << "\" }";
+			nodesJson << "  { \"id\": \"" << getNodeAddress(it) << "\", \"label\": \"" << getData(it) << "\" }";
 			isFirstNode = false;
 
-			if (it->next != nullptr)
+			if (getNext(it) != nullptr)
 			{
 				if (!isFirstEdge) edgesJson << ",\n";
-				edgesJson << "  { \"from\": \"" << getNodeAddress(it) << "\", \"to\": \"" << getNodeAddress(it->next) << "\" }";
+				edgesJson << "  { \"from\": \"" << getNodeAddress(it) << "\", \"to\": \"" << getNodeAddress(getNext(it)) << "\" }";
 				isFirstEdge = false;
 			}
 		}
@@ -161,7 +165,7 @@ namespace vis
 		return std::make_pair(nodesJson.str(), edgesJson.str());
 	}
 
-inline std::string getHtmlTemplate(const std::string& nodesJson, const std::string& edgesJson) {
+    inline std::string getHtmlTemplate(const std::string& nodesJson, const std::string& edgesJson) {
         return R"(
             <!DOCTYPE html>
             <html lang="en">
@@ -359,7 +363,18 @@ inline std::string getHtmlTemplate(const std::string& nodesJson, const std::stri
     template <LinearNode T>
 	inline void writeListHTMLFile(T *rootNode, const std::string &path)
 	{
-		std::pair<std::string, std::string> nodesEdgesJson = getNodesEdgesJson(rootNode);
+		writeListHTMLFile(rootNode, path, [](T *node) { return node->data; },
+                                          [](T *node) { return node->next; });
+	}
+
+    template <typename T, typename DataFunc, typename NextFunc>
+    inline void writeListHTMLFile(T* rootNode, const std::string &path, DataFunc getData, NextFunc getNext) 
+    {
+        std::pair<std::string, std::string> nodesEdgesJson = getNodesEdgesJson(
+            rootNode,
+            getData,
+            getNext
+        );
 
 		const std::string& nodesJson = nodesEdgesJson.first;
 		const std::string& edgesJson = nodesEdgesJson.second;
@@ -377,11 +392,13 @@ inline std::string getHtmlTemplate(const std::string& nodesJson, const std::stri
 
 		switch (osType) {
 			case 0:
+                command += "start " + path;
 				break;
 			case 1:
 				command += "google-chrome " + path;
 				break;
 			case 2:
+                command += "xdg-open " + path;
 				break;
 			case 3:
 				break;
@@ -392,7 +409,6 @@ inline std::string getHtmlTemplate(const std::string& nodesJson, const std::stri
 		std::system(command.c_str());
 
 		return;
-	}
-
+    }
 
 } // namespace vis

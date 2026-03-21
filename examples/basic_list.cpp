@@ -1,6 +1,12 @@
 #include "vis/Vis.hpp"
 #include <iostream>
 
+// this is something a nigga would create
+struct WeirdStudent {
+    std::string name;
+    WeirdStudent* nextStudent;
+};
+
 int main()
 {
 	ListNode *rootNode = new ListNode(1);
