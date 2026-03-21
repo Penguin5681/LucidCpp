@@ -151,7 +151,7 @@ void deleteList(ListNode *&head)
 	}
 }
 
-void createCycle(ListNode* &head)
+void createCycle(ListNode* &head, int cyclePosition)
 {
 	if (head == nullptr || head->next == nullptr)
 		return;
@@ -162,8 +162,8 @@ void createCycle(ListNode* &head)
 		temp = temp->next;
 		listLength++;
 	}
-	srand(time(0));
-	int cyclePosition = rand() % (listLength + 1);
+	if (cyclePosition < 0 || cyclePosition > listLength)
+		return;
 	ListNode *cycleNode = head;
 	for (int i = 0; i < cyclePosition; i++)
 	{

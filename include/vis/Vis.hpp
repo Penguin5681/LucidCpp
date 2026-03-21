@@ -40,7 +40,6 @@ namespace vis
         { node.data };
         { node.next } -> std::convertible_to<T*>;
     };
-    // TODO: Figure out cycle detection
     // TODO: Define Binary Tree Node Concept
     // TODO: Define Generic Tree Node Concept
     // TODO: Figure out the concept for graphs
@@ -154,7 +153,6 @@ namespace vis
                 isCycle = true;
                 break;
             }
-            visitedNodes.insert(it);
             if (!isFirstNode) nodesJson << ",\n";
 			nodesJson << "  { \"id\": \"" << getNodeAddress(it) << "\", \"label\": \"" << getData(it) << "\" }";
 			isFirstNode = false;
@@ -165,12 +163,15 @@ namespace vis
 				edgesJson << "  { \"from\": \"" << getNodeAddress(it) << "\", \"to\": \"" << getNodeAddress(getNext(it)) << "\" }";
 				isFirstEdge = false;
 			}
-		}
+            visitedNodes.insert(it);
+        }
 
 		nodesJson << "\n]";
 		edgesJson << "\n]"; 
 
-        isCycle ? std::cerr << "Found a cycle\n" : std::cout << "";
+        std::cout << nodesJson.str();
+        std::cout << "--------------------";
+        std::cout << edgesJson.str();
 		
 		return std::make_pair(nodesJson.str(), edgesJson.str());
 	}
@@ -358,10 +359,30 @@ namespace vis
                         }
                     }
 
-                    const tail = document.createElement('div');
-                    tail.className = 'tail';
-                    tail.textContent = 'NULL';
-                    listEl.appendChild(tail);
+                    const lastNode = nodes[nodes.length - 1];
+                    const finalTargetAddr = nextMap.get(lastNode.id);
+
+                    if (finalTargetAddr) {
+                        const targetNode = nodes.find(n => n.id === finalTargetAddr);
+                        const targetLabel = targetNode ? targetNode.label : "Unknown";
+
+                        const arrow = document.createElement('div');
+                        arrow.className = 'arrow';
+                        arrow.innerHTML = '&#8617;'; 
+                        listEl.appendChild(arrow);
+
+                        const cycleBlock = document.createElement('div');
+                        cycleBlock.className = 'tail';
+                        cycleBlock.style.borderColor = 'var(--accent)'; 
+                        cycleBlock.style.color = 'var(--accent)';
+                        cycleBlock.innerHTML = '&#128260; Cycles to: <b>' + targetLabel + '</b>';
+                        listEl.appendChild(cycleBlock);
+                    } else {
+                        const tail = document.createElement('div');
+                        tail.className = 'tail';
+                        tail.textContent = 'NULL';
+                        listEl.appendChild(tail);
+                    }
                 </script>
             </body>
             </html>
