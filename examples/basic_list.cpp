@@ -16,6 +16,8 @@ int main()
 		insertAtEnd(rootNode, i);
 	}
 
+	// createCycle(rootNode);
+
 	vis::explore("meow meow. The libray is working");
 	// vis::exploreStructure(rootNode);
 	// vis::exploreListAddressing(rootNode);

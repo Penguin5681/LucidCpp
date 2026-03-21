@@ -150,3 +150,24 @@ void deleteList(ListNode *&head)
 		deleteAtBeginning(head);
 	}
 }
+
+void createCycle(ListNode* &head)
+{
+	if (head == nullptr || head->next == nullptr)
+		return;
+	ListNode *temp = head;
+	int listLength = 0;
+	while (temp->next != nullptr)
+	{
+		temp = temp->next;
+		listLength++;
+	}
+	srand(time(0));
+	int cyclePosition = rand() % (listLength + 1);
+	ListNode *cycleNode = head;
+	for (int i = 0; i < cyclePosition; i++)
+	{
+		cycleNode = cycleNode->next;
+	}
+	temp->next = cycleNode;
+}

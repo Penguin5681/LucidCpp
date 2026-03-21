@@ -8,6 +8,7 @@
 #include <thread>
 #include <vector>
 #include <concepts>
+#include <unordered_set>
 
 #include "../DSHeaders/ListNode.hpp"
 
@@ -137,6 +138,7 @@ namespace vis
 
     template <typename T, typename DataFunc, typename NextFunc>
 	inline std::pair<std::string, std::string> getNodesEdgesJson(T* rootNode, DataFunc getData, NextFunc getNext) {
+        std::unordered_set<const void*> visitedNodes;
 		std::stringstream nodesJson;
 		std::stringstream edgesJson;
 		
@@ -145,9 +147,15 @@ namespace vis
 		
 		bool isFirstNode = true;
     	bool isFirstEdge = true;
+        bool isCycle = false;
 		for (auto it = rootNode; it != nullptr; it = getNext(it))
 		{
-			if (!isFirstNode) nodesJson << ",\n";
+            if (visitedNodes.find(it) != visitedNodes.end()) {
+                isCycle = true;
+                break;
+            }
+            visitedNodes.insert(it);
+            if (!isFirstNode) nodesJson << ",\n";
 			nodesJson << "  { \"id\": \"" << getNodeAddress(it) << "\", \"label\": \"" << getData(it) << "\" }";
 			isFirstNode = false;
 
@@ -161,6 +169,8 @@ namespace vis
 
 		nodesJson << "\n]";
 		edgesJson << "\n]"; 
+
+        isCycle ? std::cerr << "Found a cycle\n" : std::cout << "";
 		
 		return std::make_pair(nodesJson.str(), edgesJson.str());
 	}
