@@ -11,7 +11,7 @@ int main()
 	}
 
 	vis::explore("meow meow. The libray is working");
-	// vis::exploreList(rootNode);
+	// vis::exploreStructure(rootNode);
 	// vis::exploreListAddressing(rootNode);
 
 	// vis::writeListDotFile(rootNode, "list.dot");

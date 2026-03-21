@@ -7,6 +7,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <concepts>
 
 #include "../DSHeaders/ListNode.hpp"
 
@@ -33,7 +34,13 @@ namespace osdetecter
 
 namespace vis
 {
-	inline void exploreList(ListNode *rootNode)
+    template <typename T>
+    concept LinearNode = requires(T node) {
+        { node.data };
+        { node.next } -> std::convertible_to<T*>;
+    };
+
+	inline void exploreStructure(ListNode *rootNode)
 	{
 		while (rootNode != nullptr)
 		{
@@ -124,7 +131,8 @@ namespace vis
 		return;
 	}
 
-	inline std::pair<std::string, std::string> getNodesEdgesJson(ListNode* rootNode) {
+    template <typename T>
+	inline std::pair<std::string, std::string> getNodesEdgesJson(T* rootNode) {
 		std::stringstream nodesJson;
 		std::stringstream edgesJson;
 		
@@ -348,7 +356,8 @@ inline std::string getHtmlTemplate(const std::string& nodesJson, const std::stri
 	// NOTE: This will output a .html file containing the renderable content
 	// opened in browser ofc
 
-	inline void writeListHTMLFile(ListNode *rootNode, const std::string &path)
+    template <LinearNode T>
+	inline void writeListHTMLFile(T *rootNode, const std::string &path)
 	{
 		std::pair<std::string, std::string> nodesEdgesJson = getNodesEdgesJson(rootNode);
 
