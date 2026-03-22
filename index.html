@@ -1,248 +1,330 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linked List Render</title>
-    <style>
-        :root {
-            --bg: #f5f2ea;
-            --ink: #1b1b1b;
-            --accent: #e07a5f;
-            --panel: #fff7e8;
-            --border: #2f2f2f;
-        }
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Linked List Render</title>
+                <style>
+                    :root {
+                        --bg: #f5f2ea;
+                        --ink: #1b1b1b;
+                        --accent: #e07a5f;
+                        --panel: #fff7e8;
+                        --border: #2f2f2f;
+                    }
+                    * { box-sizing: border-box; }
+                    body {
+                        margin: 0;
+                        font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+                        background: radial-gradient(1200px 800px at 20% 10%, #fff2d8, var(--bg));
+                        color: var(--ink);
+                    }
+                    .header {
+                        padding: 20px 24px 8px;
+                    }
+                    .header h1 {
+                        margin: 0;
+                        font-size: 20px;
+                        letter-spacing: 1px;
+                        text-transform: uppercase;
+                    }
+                    .header p {
+                        margin: 6px 0 0;
+                        font-size: 13px;
+                        opacity: 0.75;
+                    }
+                    .container {
+                        overflow-x: auto;
+                        padding: 40px 24px 32px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Linked List</h1>
+                    <p>SVG Based Memory Renderer</p>
+                </div>
+                <div class="container">
+                    <svg id="canvas" height="350px" style="border: 1px #deb5aa solid;" xmlns="http://www.w3.org/2000/svg">
+                        </svg>
+                </div>
+                <script type="text/javascript">
+                    const nodes = [
+  { "id": "0x5a134661e320", "label": "1" },
+  { "id": "0x5a134661e340", "label": "2" },
+  { "id": "0x5a134661e360", "label": "3" },
+  { "id": "0x5a134661e380", "label": "4" },
+  { "id": "0x5a134661e3a0", "label": "5" },
+  { "id": "0x5a134661e3c0", "label": "6" },
+  { "id": "0x5a134661e3e0", "label": "7" },
+  { "id": "0x5a134661e400", "label": "8" },
+  { "id": "0x5a134661e420", "label": "9" },
+  { "id": "0x5a134661e440", "label": "10" },
+  { "id": "0x5a134661e460", "label": "11" },
+  { "id": "0x5a134661e480", "label": "12" },
+  { "id": "0x5a134661e4a0", "label": "13" },
+  { "id": "0x5a134661e4c0", "label": "14" },
+  { "id": "0x5a134661e4e0", "label": "15" },
+  { "id": "0x5a134661e500", "label": "16" },
+  { "id": "0x5a134661e520", "label": "17" },
+  { "id": "0x5a134661e540", "label": "18" },
+  { "id": "0x5a134661e560", "label": "19" },
+  { "id": "0x5a134661e580", "label": "20" },
+  { "id": "0x5a134661e5a0", "label": "21" },
+  { "id": "0x5a134661e5c0", "label": "22" },
+  { "id": "0x5a134661e5e0", "label": "23" },
+  { "id": "0x5a134661e600", "label": "24" },
+  { "id": "0x5a134661e620", "label": "25" },
+  { "id": "0x5a134661e640", "label": "26" },
+  { "id": "0x5a134661e660", "label": "27" },
+  { "id": "0x5a134661e680", "label": "28" },
+  { "id": "0x5a134661e6a0", "label": "29" },
+  { "id": "0x5a134661e6c0", "label": "30" },
+  { "id": "0x5a134661e6e0", "label": "31" },
+  { "id": "0x5a134661e700", "label": "32" },
+  { "id": "0x5a134661e720", "label": "33" },
+  { "id": "0x5a134661e740", "label": "34" },
+  { "id": "0x5a134661e760", "label": "35" },
+  { "id": "0x5a134661e780", "label": "36" },
+  { "id": "0x5a134661e7a0", "label": "37" },
+  { "id": "0x5a134661e7c0", "label": "38" },
+  { "id": "0x5a134661e7e0", "label": "39" },
+  { "id": "0x5a134661e800", "label": "40" },
+  { "id": "0x5a134661e820", "label": "41" },
+  { "id": "0x5a134661e840", "label": "42" },
+  { "id": "0x5a134661e860", "label": "43" },
+  { "id": "0x5a134661e880", "label": "44" },
+  { "id": "0x5a134661e8a0", "label": "45" },
+  { "id": "0x5a134661e8c0", "label": "46" },
+  { "id": "0x5a134661e8e0", "label": "47" },
+  { "id": "0x5a134661e900", "label": "48" },
+  { "id": "0x5a134661e920", "label": "49" },
+  { "id": "0x5a134661e940", "label": "50" },
+  { "id": "0x5a134661e960", "label": "51" },
+  { "id": "0x5a134661e980", "label": "52" },
+  { "id": "0x5a134661e9a0", "label": "53" },
+  { "id": "0x5a134661e9c0", "label": "54" },
+  { "id": "0x5a134661e9e0", "label": "55" },
+  { "id": "0x5a134661ea00", "label": "56" },
+  { "id": "0x5a134661ea20", "label": "57" },
+  { "id": "0x5a134661ea40", "label": "58" },
+  { "id": "0x5a134661ea60", "label": "59" },
+  { "id": "0x5a134661ea80", "label": "60" },
+  { "id": "0x5a134661eaa0", "label": "61" },
+  { "id": "0x5a134661eac0", "label": "62" },
+  { "id": "0x5a134661eae0", "label": "63" },
+  { "id": "0x5a134661eb00", "label": "64" },
+  { "id": "0x5a134661eb20", "label": "65" },
+  { "id": "0x5a134661eb40", "label": "66" },
+  { "id": "0x5a134661eb60", "label": "67" },
+  { "id": "0x5a134661eb80", "label": "68" },
+  { "id": "0x5a134661eba0", "label": "69" },
+  { "id": "0x5a134661ebc0", "label": "70" },
+  { "id": "0x5a134661ebe0", "label": "71" },
+  { "id": "0x5a134661ec00", "label": "72" },
+  { "id": "0x5a134661ec20", "label": "73" },
+  { "id": "0x5a134661ec40", "label": "74" },
+  { "id": "0x5a134661ec60", "label": "75" },
+  { "id": "0x5a134661ec80", "label": "76" },
+  { "id": "0x5a134661eca0", "label": "77" },
+  { "id": "0x5a134661ecc0", "label": "78" },
+  { "id": "0x5a134661ece0", "label": "79" },
+  { "id": "0x5a134661ed00", "label": "80" },
+  { "id": "0x5a134661ed20", "label": "81" },
+  { "id": "0x5a134661ed40", "label": "82" },
+  { "id": "0x5a134661ed60", "label": "83" },
+  { "id": "0x5a134661ed80", "label": "84" },
+  { "id": "0x5a134661eda0", "label": "85" },
+  { "id": "0x5a134661edc0", "label": "86" },
+  { "id": "0x5a134661ede0", "label": "87" },
+  { "id": "0x5a134661ee00", "label": "88" },
+  { "id": "0x5a134661ee20", "label": "89" },
+  { "id": "0x5a134661ee40", "label": "90" },
+  { "id": "0x5a134661ee60", "label": "91" },
+  { "id": "0x5a134661ee80", "label": "92" },
+  { "id": "0x5a134661eea0", "label": "93" },
+  { "id": "0x5a134661eec0", "label": "94" },
+  { "id": "0x5a134661eee0", "label": "95" },
+  { "id": "0x5a134661ef00", "label": "96" },
+  { "id": "0x5a134661ef20", "label": "97" },
+  { "id": "0x5a134661ef40", "label": "98" },
+  { "id": "0x5a134661ef60", "label": "99" },
+  { "id": "0x5a134661ef80", "label": "100" },
+  { "id": "0x5a134661efa0", "label": "101" },
+  { "id": "0x5a134661efc0", "label": "102" },
+  { "id": "0x5a134661efe0", "label": "103" },
+  { "id": "0x5a134661f000", "label": "104" },
+  { "id": "0x5a134661f020", "label": "105" },
+  { "id": "0x5a134661f040", "label": "106" },
+  { "id": "0x5a134661f060", "label": "107" },
+  { "id": "0x5a134661f080", "label": "108" },
+  { "id": "0x5a134661f0a0", "label": "109" },
+  { "id": "0x5a134661f0c0", "label": "110" }
+];
+                    const edges = [
+  { "from": "0x5a134661e320", "to": "0x5a134661e340" },
+  { "from": "0x5a134661e340", "to": "0x5a134661e360" },
+  { "from": "0x5a134661e360", "to": "0x5a134661e380" },
+  { "from": "0x5a134661e380", "to": "0x5a134661e3a0" },
+  { "from": "0x5a134661e3a0", "to": "0x5a134661e3c0" },
+  { "from": "0x5a134661e3c0", "to": "0x5a134661e3e0" },
+  { "from": "0x5a134661e3e0", "to": "0x5a134661e400" },
+  { "from": "0x5a134661e400", "to": "0x5a134661e420" },
+  { "from": "0x5a134661e420", "to": "0x5a134661e440" },
+  { "from": "0x5a134661e440", "to": "0x5a134661e460" },
+  { "from": "0x5a134661e460", "to": "0x5a134661e480" },
+  { "from": "0x5a134661e480", "to": "0x5a134661e4a0" },
+  { "from": "0x5a134661e4a0", "to": "0x5a134661e4c0" },
+  { "from": "0x5a134661e4c0", "to": "0x5a134661e4e0" },
+  { "from": "0x5a134661e4e0", "to": "0x5a134661e500" },
+  { "from": "0x5a134661e500", "to": "0x5a134661e520" },
+  { "from": "0x5a134661e520", "to": "0x5a134661e540" },
+  { "from": "0x5a134661e540", "to": "0x5a134661e560" },
+  { "from": "0x5a134661e560", "to": "0x5a134661e580" },
+  { "from": "0x5a134661e580", "to": "0x5a134661e5a0" },
+  { "from": "0x5a134661e5a0", "to": "0x5a134661e5c0" },
+  { "from": "0x5a134661e5c0", "to": "0x5a134661e5e0" },
+  { "from": "0x5a134661e5e0", "to": "0x5a134661e600" },
+  { "from": "0x5a134661e600", "to": "0x5a134661e620" },
+  { "from": "0x5a134661e620", "to": "0x5a134661e640" },
+  { "from": "0x5a134661e640", "to": "0x5a134661e660" },
+  { "from": "0x5a134661e660", "to": "0x5a134661e680" },
+  { "from": "0x5a134661e680", "to": "0x5a134661e6a0" },
+  { "from": "0x5a134661e6a0", "to": "0x5a134661e6c0" },
+  { "from": "0x5a134661e6c0", "to": "0x5a134661e6e0" },
+  { "from": "0x5a134661e6e0", "to": "0x5a134661e700" },
+  { "from": "0x5a134661e700", "to": "0x5a134661e720" },
+  { "from": "0x5a134661e720", "to": "0x5a134661e740" },
+  { "from": "0x5a134661e740", "to": "0x5a134661e760" },
+  { "from": "0x5a134661e760", "to": "0x5a134661e780" },
+  { "from": "0x5a134661e780", "to": "0x5a134661e7a0" },
+  { "from": "0x5a134661e7a0", "to": "0x5a134661e7c0" },
+  { "from": "0x5a134661e7c0", "to": "0x5a134661e7e0" },
+  { "from": "0x5a134661e7e0", "to": "0x5a134661e800" },
+  { "from": "0x5a134661e800", "to": "0x5a134661e820" },
+  { "from": "0x5a134661e820", "to": "0x5a134661e840" },
+  { "from": "0x5a134661e840", "to": "0x5a134661e860" },
+  { "from": "0x5a134661e860", "to": "0x5a134661e880" },
+  { "from": "0x5a134661e880", "to": "0x5a134661e8a0" },
+  { "from": "0x5a134661e8a0", "to": "0x5a134661e8c0" },
+  { "from": "0x5a134661e8c0", "to": "0x5a134661e8e0" },
+  { "from": "0x5a134661e8e0", "to": "0x5a134661e900" },
+  { "from": "0x5a134661e900", "to": "0x5a134661e920" },
+  { "from": "0x5a134661e920", "to": "0x5a134661e940" },
+  { "from": "0x5a134661e940", "to": "0x5a134661e960" },
+  { "from": "0x5a134661e960", "to": "0x5a134661e980" },
+  { "from": "0x5a134661e980", "to": "0x5a134661e9a0" },
+  { "from": "0x5a134661e9a0", "to": "0x5a134661e9c0" },
+  { "from": "0x5a134661e9c0", "to": "0x5a134661e9e0" },
+  { "from": "0x5a134661e9e0", "to": "0x5a134661ea00" },
+  { "from": "0x5a134661ea00", "to": "0x5a134661ea20" },
+  { "from": "0x5a134661ea20", "to": "0x5a134661ea40" },
+  { "from": "0x5a134661ea40", "to": "0x5a134661ea60" },
+  { "from": "0x5a134661ea60", "to": "0x5a134661ea80" },
+  { "from": "0x5a134661ea80", "to": "0x5a134661eaa0" },
+  { "from": "0x5a134661eaa0", "to": "0x5a134661eac0" },
+  { "from": "0x5a134661eac0", "to": "0x5a134661eae0" },
+  { "from": "0x5a134661eae0", "to": "0x5a134661eb00" },
+  { "from": "0x5a134661eb00", "to": "0x5a134661eb20" },
+  { "from": "0x5a134661eb20", "to": "0x5a134661eb40" },
+  { "from": "0x5a134661eb40", "to": "0x5a134661eb60" },
+  { "from": "0x5a134661eb60", "to": "0x5a134661eb80" },
+  { "from": "0x5a134661eb80", "to": "0x5a134661eba0" },
+  { "from": "0x5a134661eba0", "to": "0x5a134661ebc0" },
+  { "from": "0x5a134661ebc0", "to": "0x5a134661ebe0" },
+  { "from": "0x5a134661ebe0", "to": "0x5a134661ec00" },
+  { "from": "0x5a134661ec00", "to": "0x5a134661ec20" },
+  { "from": "0x5a134661ec20", "to": "0x5a134661ec40" },
+  { "from": "0x5a134661ec40", "to": "0x5a134661ec60" },
+  { "from": "0x5a134661ec60", "to": "0x5a134661ec80" },
+  { "from": "0x5a134661ec80", "to": "0x5a134661eca0" },
+  { "from": "0x5a134661eca0", "to": "0x5a134661ecc0" },
+  { "from": "0x5a134661ecc0", "to": "0x5a134661ece0" },
+  { "from": "0x5a134661ece0", "to": "0x5a134661ed00" },
+  { "from": "0x5a134661ed00", "to": "0x5a134661ed20" },
+  { "from": "0x5a134661ed20", "to": "0x5a134661ed40" },
+  { "from": "0x5a134661ed40", "to": "0x5a134661ed60" },
+  { "from": "0x5a134661ed60", "to": "0x5a134661ed80" },
+  { "from": "0x5a134661ed80", "to": "0x5a134661eda0" },
+  { "from": "0x5a134661eda0", "to": "0x5a134661edc0" },
+  { "from": "0x5a134661edc0", "to": "0x5a134661ede0" },
+  { "from": "0x5a134661ede0", "to": "0x5a134661ee00" },
+  { "from": "0x5a134661ee00", "to": "0x5a134661ee20" },
+  { "from": "0x5a134661ee20", "to": "0x5a134661ee40" },
+  { "from": "0x5a134661ee40", "to": "0x5a134661ee60" },
+  { "from": "0x5a134661ee60", "to": "0x5a134661ee80" },
+  { "from": "0x5a134661ee80", "to": "0x5a134661eea0" },
+  { "from": "0x5a134661eea0", "to": "0x5a134661eec0" },
+  { "from": "0x5a134661eec0", "to": "0x5a134661eee0" },
+  { "from": "0x5a134661eee0", "to": "0x5a134661ef00" },
+  { "from": "0x5a134661ef00", "to": "0x5a134661ef20" },
+  { "from": "0x5a134661ef20", "to": "0x5a134661ef40" },
+  { "from": "0x5a134661ef40", "to": "0x5a134661ef60" },
+  { "from": "0x5a134661ef60", "to": "0x5a134661ef80" },
+  { "from": "0x5a134661ef80", "to": "0x5a134661efa0" },
+  { "from": "0x5a134661efa0", "to": "0x5a134661efc0" },
+  { "from": "0x5a134661efc0", "to": "0x5a134661efe0" },
+  { "from": "0x5a134661efe0", "to": "0x5a134661f000" },
+  { "from": "0x5a134661f000", "to": "0x5a134661f020" },
+  { "from": "0x5a134661f020", "to": "0x5a134661f040" },
+  { "from": "0x5a134661f040", "to": "0x5a134661f060" },
+  { "from": "0x5a134661f060", "to": "0x5a134661f080" },
+  { "from": "0x5a134661f080", "to": "0x5a134661f0a0" },
+  { "from": "0x5a134661f0a0", "to": "0x5a134661f0c0" },
+  { "from": "0x5a134661f0c0", "to": "0x5a134661e840" }
+];
 
-        * {
-            box-sizing: border-box;
-        }
+                    const nextMap = new Map();
+                    for (const edge of edges) {
+                        nextMap.set(edge.from, edge.to);
+                    }
 
-        body {
-            margin: 0;
-            font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
-            background: radial-gradient(1200px 800px at 20% 10%, #fff2d8, var(--bg));
-            color: var(--ink);
-        }
+                    const canvas = document.getElementById('canvas');
+                    const xw = 250;
+                    
+                    // FIX 1: Add 'px' to the width assignment
+                    canvas.style.width = (nodes.length * xw + 50) + "px"; 
 
-        .header {
-            padding: 20px 24px 8px;
-        }
+                    for (let i = 0; i < nodes.length; i++) {
+                        const node = nodes[i];
+                        const nextAddr = nextMap.get(node.id) || 'NULL';
 
-        .header h1 {
-            margin: 0;
-            font-size: 20px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+                        // Truncate nextAddr to keep UI clean if it's too long
+                        const displayAddr = nextAddr.length > 14 ? nextAddr.substring(0, 12) + '...' : nextAddr;
 
-        .header p {
-            margin: 6px 0 0;
-            font-size: 13px;
-            opacity: 0.75;
-        }
+                        canvas.innerHTML += '<rect class="next" width="150" height="100" x="'+(xw*i + 70)+'" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>';
+                        canvas.innerHTML += '<text x="'+(xw*i + 105)+'" y="50" font-size="12" fill="white">NEXT</text>';
+                        canvas.innerHTML += '<rect class="add" width="105" height="50" rx="10" ry="10" x="'+(xw*i + 100)+'" y="60"  fill="white" stroke="black" stroke-dasharray="2,2" stroke-width="1px"/>';
+                        canvas.innerHTML += '<text x="'+(xw*i + 106)+'" y="88" font-size="12" font-family="monospace" fill="black">'+displayAddr+'</text>';
+                        
+                        canvas.innerHTML += '<rect class="data" id="node'+i+'" width="70" height="100" x="'+(xw*i + 20)+'" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>';
+                        canvas.innerHTML += '<text x="'+(xw*i + 40)+'" y="50" font-size="12" fill="white">DATA</text>';
+                        canvas.innerHTML += '<text x="'+(xw*i + 40)+'" y="85" font-size="16" fill="white">'+(node.label)+'</text>';
 
-        #list {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            padding: 40px 24px 32px;
-            /* Increased top padding to make room for tooltip */
-            overflow-x: auto;
-            min-height: 200px;
-        }
+                        if (i < nodes.length - 1) {
+                            canvas.innerHTML += '<path d="M'+(250*(i+1)+1.883)+' 70 l-7.527 6.235.644.765 9-7.521-9-7.479-.645.764 7.529 6.236h-21.884v1h21.883z" fill="var(--accent)\" />';
+                        }
+                    }
 
-        .container{
-            overflow-x: auto;
-        }
+                    const lastNode = nodes[nodes.length - 1];
+                    const finalTargetAddr = nextMap.get(lastNode.id);
 
-        .node {
-            position: relative;
-            display: flex;
-            grid-template-columns: 1fr 1fr;
-            min-width: 200px;
-            /* Slightly wider to accommodate hex strings */
-            border: 2px solid var(--border);
-            background: var(--panel);
-            box-shadow: 6px 6px 0 #2f2f2f22;
-            transform: translateY(0);
-            transition: transform 160ms ease, box-shadow 160ms ease;
-        }
+                    if (finalTargetAddr) {
+                        // FIX 2: Find the array index of the target node instead of using its string label for math
+                        const targetIndex = nodes.findIndex(n => n.id === finalTargetAddr);
+                        
+                        if (targetIndex !== -1) {
+                            // Calculate the math based on the index (0-based) instead of the label (1-based)
+                            // 250 * (targetIndex + 1) - 195  ==> 250 * targetIndex + 55
+                            const startX = 250 * targetIndex + 55;
+                            const widthJump = 250 * (nodes.length - 1 - targetIndex) + 100;
 
-        .node:hover {
-            transform: translateY(-4px);
-            box-shadow: 10px 10px 0 #2f2f2f22;
-        }
-
-        /* NEW: The floating tooltip for the current address */
-        .current-addr {
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(5px);
-            background: var(--ink);
-            color: var(--bg);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-family: monospace;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 160ms ease, transform 160ms ease;
-            white-space: nowrap;
-        }
-
-        /* Show tooltip on node hover */
-        .node:hover .current-addr {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .block {
-            padding: 12px 14px;
-            border-right: 2px solid var(--border);
-            min-height: 70px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            max-width: 120px;
-            /* Force a max width so it wraps */
-        }
-
-        .block:last-child {
-            border-right: none;
-        }
-
-        .label {
-            font-size: 11px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            opacity: 0.6;
-        }
-
-        .value {
-            margin-top: 6px;
-            font-size: 15px;
-            font-weight: 600;
-            word-break: break-word;
-            /* Prevents massive data from overflowing */
-        }
-
-        .next-value {
-            display: inline-block;
-            padding: 4px 6px;
-            border: 1px dashed var(--border);
-            background: #fff;
-            opacity: 0;
-            font-family: monospace;
-            /* Monospace looks better for hex */
-            font-size: 11px;
-            /* Shrink address text */
-            word-break: break-all;
-            /* CRITICAL: forces the hex string to wrap to the next line */
-            transform: translateY(4px);
-            transition: opacity 140ms ease, transform 140ms ease;
-        }
-
-        .node:hover .next-value {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .arrow {
-            font-size: 20px;
-            color: var(--accent);
-        }
-
-        .tail {
-            font-weight: 600;
-            padding: 10px 14px;
-            border: 2px dashed var(--border);
-            background: #fff;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="header">
-        <h1>Linked List</h1>
-        <p>Hover a node to reveal its memory address and next pointer.</p>
-    </div>
-    <div class="container" style="padding-top: 100px;">
-        <svg id="canvas" width="120%" height="350px" style="border: 1px #deb5aa solid;" xmlns="http://www.w3.org/2000/svg">
-            <!-- <rect class="data" width="150" height="100" x="70" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>
-                <text x="105" y="50" font-size="12" fill="white">NEXT</text>
-                <rect class="data" width="105" height="50" rx="10" ry="10" x="100" y="60"  fill="white" stroke="black" stroke-dasharray="2,2" stroke-width="1px"/>
-                    <text x="106" y="88" font-size="12"  fill="black">0x5e6057577340</text>
-            <rect class="value" width="70" height="100" x="20" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>
-                <text x="40" y="50" font-size="12" fill="white">DATA</text>
-                <text x="40" y="85" font-size="16" fill="white">1</text> -->
-        </svg>
-    </div>
-    <script type="text/javascript">
-        const nodes = [
-            { "id": "0x5e6057577320", "label": "1" },
-            { "id": "0x5e6057577340", "label": "2" },
-            { "id": "0x5e6057577360", "label": "3" },
-            { "id": "0x5e6057577380", "label": "4" },
-            { "id": "0x5e60575773a0", "label": "5" },
-            { "id": "0x5e60575773c0", "label": "6" },
-            { "id": "0x5e60575773e0", "label": "7" },
-            { "id": "0x5e6057577400", "label": "8" },
-            { "id": "0x5e6057577420", "label": "9" },
-            { "id": "0x5e6057577440", "label": "10" }
-        ];
-        const edges = [
-            { "from": "0x5e6057577320", "to": "0x5e6057577340" },
-            { "from": "0x5e6057577340", "to": "0x5e6057577360" },
-            { "from": "0x5e6057577360", "to": "0x5e6057577380" },
-            { "from": "0x5e6057577380", "to": "0x5e60575773a0" },
-            { "from": "0x5e60575773a0", "to": "0x5e60575773c0" },
-            { "from": "0x5e60575773c0", "to": "0x5e60575773e0" },
-            { "from": "0x5e60575773e0", "to": "0x5e6057577400" },
-            { "from": "0x5e6057577400", "to": "0x5e6057577420" },
-            { "from": "0x5e6057577420", "to": "0x5e6057577440" },
-            { "from": "0x5e6057577440", "to": "0x5e60575773a0" }
-        ];
-
-        const nextMap = new Map();
-        for (const edge of edges) {
-            nextMap.set(edge.from, edge.to);
-        }
-
-        const listEl = document.getElementById('canvas');
-        const xw = 250;
-        canvas.style.width=nodes.length*xw;
-        for (let i = 0; i < nodes.length; i++) {
-            const node = nodes[i];
-            const nextAddr = nextMap.get(node.id) || 'NULL';
-
-            canvas.innerHTML += '<rect class="next" width="150" height="100" x="'+(xw*i + 70)+'" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>';
-            canvas.innerHTML += '<text x="'+(xw*i + 105)+'" y="50" font-size="12" fill="white">NEXT</text>';
-            canvas.innerHTML += '<rect class="add" width="105" height="50" rx="10" ry="10" x="'+(xw*i + 100)+'" y="60"  fill="white" stroke="black" stroke-dasharray="2,2" stroke-width="1px"/>';
-            canvas.innerHTML += '<text x="'+(xw*i + 106)+'" y="88" font-size="12"  fill="black">'+nextAddr+'</text>';
-            canvas.innerHTML += '<rect class="data" id="node'+i+'" width="70" height="100" x="'+(xw*i + 20)+'" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>';
-            canvas.innerHTML += '<text x="'+(xw*i + 40)+'" y="50" font-size="12" fill="white">DATA</text>';
-            canvas.innerHTML += '<text x="'+(xw*i + 40)+'" y="85" font-size="16" fill="white">'+(node.label)+'</text></g>';
-
-
-            if (i < nodes.length - 1) {
-                canvas.innerHTML += '<path d="M'+(250*(i+1)+1.883)+' 70 l-7.527 6.235.644.765 9-7.521-9-7.479-.645.764 7.529 6.236h-21.884v1h21.883z"  />';
-            }
-        }
-
-        const lastNode = nodes[nodes.length - 1];
-        const finalTargetAddr = nextMap.get(lastNode.id);
-
-        if (finalTargetAddr) {
-            const targetNode = nodes.find(n => n.id === finalTargetAddr);
-            const targetLabel = targetNode ? targetNode.label : "Unknown";
-
-            const locx = xw* (targetLabel);
-            canvas.innerHTML += '<path d="M'+(250*(targetLabel)-195)+' 120 v50 h'+(250*(nodes.length-(targetLabel))+100)+'  v-50 v50 h-'+(250*(nodes.length-(targetLabel))+100)+' c20 30  Z" stroke="#000000" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"></path>';
-            canvas.innerHTML += '<path d="M'+(250*(targetLabel)-195)+' 120 l-10 10 l20 0  Z" stroke="#000000" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"></path>';
-        } 
-    </script>
-</body>
-
-</html>
+                            canvas.innerHTML += '<path d="M'+startX+' 120 v50 h'+widthJump+' v-50 v50 h-'+widthJump+' c20 30 Z" stroke="#e07a5f" fill="none" stroke-opacity="0.9" stroke-width="2" stroke-dasharray="5,5" stroke-linecap="round" stroke-linejoin="round"></path>';
+                            canvas.innerHTML += '<path d="M'+startX+' 120 l-10 10 l20 0 Z" fill="#e07a5f" stroke="#e07a5f" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"></path>';
+                        }
+                    } 
+                </script>
+            </body>
+            </html>
+        

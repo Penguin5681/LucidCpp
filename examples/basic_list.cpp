@@ -1,5 +1,6 @@
 #include "vis/Vis.hpp"
 #include <iostream>
+#include "../DSHeaders/ListNode.hpp"
 
 // this is something a nigga would create
 struct WeirdStudent {
@@ -11,12 +12,12 @@ int main()
 {
 	ListNode *rootNode = new ListNode(1);
 
-	for (int i = 2; i != 11; i++)
+	for (int i = 2; i != 111; i++)
 	{
 		insertAtEnd(rootNode, i);
 	}
 
-	createCycle(rootNode, 4);
+	createCycle(rootNode, 41);
 
 	vis::explore("meow meow. The libray is working");
 	// vis::exploreStructure(rootNode);
