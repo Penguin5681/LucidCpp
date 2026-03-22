@@ -1,5 +1,6 @@
 #include "vis/Vis.hpp"
 #include <iostream>
+#include "../DSHeaders/ListNode.hpp"
 
 // this is something a nigga would create
 struct WeirdStudent {

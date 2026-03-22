@@ -11,8 +11,6 @@
 #include <unordered_set>
 #include <queue>
 
-#include "../DSHeaders/ListNode.hpp"
-
 // clang-format off
 namespace osdetecter
 {
@@ -45,7 +43,8 @@ namespace vis
     // TODO: Define Generic Tree Node Concept
     // TODO: Figure out the concept for graphs
 
-	inline void exploreStructure(ListNode *rootNode)
+    template <typename T>
+	inline void exploreStructure(T *rootNode)
 	{
 		while (rootNode != nullptr)
 		{
@@ -64,7 +63,8 @@ namespace vis
 		return ss.str();
 	}
 
-	inline void exploreListAddressing(ListNode *rootNode)
+    template <typename T>
+	inline void exploreListAddressing(T *rootNode)
 	{
 		while (rootNode != nullptr)
 		{
@@ -83,8 +83,8 @@ namespace vis
 
 	// NOTE: This will output a .dot file containing the renderable graphviz dot
 	// graph
-
-	inline void writeListDotFile(ListNode *rootNode,
+    template <typename T>
+	inline void writeListDotFile(T *rootNode,
 								 const std::string &path,
 								 const std::string svgOutputPath = "out.svg")
 	{
