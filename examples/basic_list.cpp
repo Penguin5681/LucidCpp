@@ -12,14 +12,14 @@ int main()
 {
 	ListNode *rootNode = new ListNode(1);
 
-	for (int i = 2; i != 111; i++)
+	for (int i = 2; i != 11; i++)
 	{
 		insertAtEnd(rootNode, i);
 	}
 
 	createCycle(rootNode, 41);
 
-	vis::explore("meow meow. The libray is working");
+	// vis::explore("meow meow. The libray is working");
 	// vis::exploreStructure(rootNode);
 	// vis::exploreListAddressing(rootNode);
 

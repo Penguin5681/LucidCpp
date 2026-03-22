@@ -35,6 +35,24 @@ namespace osdetecter
 namespace vis
 {
     template <typename T>
+    inline std::string sanitizeForJson(const T& rawData) {
+        std::stringstream ss;
+        ss << rawData; // Convert int/float/string into a raw string
+        std::string input = ss.str();
+        std::string output;
+        
+        for (char c : input) {
+            if (c == '\n') output += "\\n";       
+            else if (c == '\"') output += "\\\"";  
+            else if (c == '\\') output += "\\\\";  
+            else if (c == '\r') output += "\\r";   
+            else if (c == '\t') output += "\\t";   
+            else output += c;
+        }
+        return output;
+    }
+
+    template <typename T>
     concept LinearNode = requires(T node) {
         { node.data };
         { node.next } -> std::convertible_to<T*>;
@@ -157,9 +175,8 @@ namespace vis
             T* current = q.front();
             q.pop();
 
-            // FIX 1: Add comma for Nodes
             if (!isFirstNode) nodesJson << ",\n";
-            nodesJson << "  { \"id\": \"" << getNodeAddress(current) << "\", \"label\": \"" << getData(current) << "\" }";
+            nodesJson << "  { \"id\": \"" << getNodeAddress(current) << "\", \"label\": \"" << sanitizeForJson(getData(current)) << "\" }";
             isFirstNode = false;
 
             std::vector<T*> children = getChildren(current);
@@ -168,7 +185,6 @@ namespace vis
                     continue;
                 }
                 
-                // FIX 2: Add comma for Edges
                 if (!isFirstEdge) edgesJson << ",\n";
                 edgesJson << "  { \"from\": \"" << getNodeAddress(current) << "\", \"to\": \"" << getNodeAddress(child) << "\" }";
                 isFirstEdge = false;
@@ -347,7 +363,8 @@ namespace vis
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Tree Render</title>
+                <title>Tree Data Structure Render</title>
+                <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
                 <style>
                     :root {
                         --bg: #f5f2ea;
@@ -356,15 +373,23 @@ namespace vis
                         --panel: #fff7e8;
                         --border: #2f2f2f;
                     }
-                    * { box-sizing: border-box; }
-                    body {
+                    body, html {
                         margin: 0;
+                        padding: 0;
+                        width: 100%;
+                        height: 100%;
                         font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
                         background: radial-gradient(1200px 800px at 20% 10%, #fff2d8, var(--bg));
                         color: var(--ink);
+                        overflow: hidden; 
                     }
                     .header {
-                        padding: 20px 24px 8px;
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        padding: 20px 24px;
+                        z-index: 10;
+                        pointer-events: none; 
                     }
                     .header h1 {
                         margin: 0;
@@ -377,131 +402,83 @@ namespace vis
                         font-size: 13px;
                         opacity: 0.75;
                     }
-                    #tree {
-                        padding: 40px 24px;
-                        overflow: auto;
-                        min-height: 600px;
-                        display: flex;
-                        justify-content: center;
-                    }
-                    .tree-container {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 40px;
-                    }
-                    .tree-node {
-                        position: relative;
-                        display: inline-block;
-                        padding: 12px 16px;
-                        border: 2px solid var(--border);
-                        background: var(--panel);
-                        box-shadow: 6px 6px 0 #2f2f2f22;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        transition: all 160ms ease;
-                        max-width: 180px;
-                        word-wrap: break-word;
-                    }
-                    .tree-node:hover {
-                        transform: translateY(-4px);
-                        box-shadow: 10px 10px 0 #2f2f2f22;
-                        background: #fffbf0;
-                    }
-                    .tree-node .label {
-                        font-size: 10px;
-                        opacity: 0.6;
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                    }
-                    .tree-node .value {
-                        font-size: 14px;
-                        font-weight: 600;
-                        margin-top: 4px;
-                    }
-                    .tree-level {
-                        display: flex;
-                        justify-content: center;
-                        gap: 30px;
-                        flex-wrap: wrap;
-                    }
-                    .tree-branch {
-                        position: relative;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                    }
-                    svg.connector {
+                    #tree-network {
+                        width: 100%;
+                        height: 100%;
                         position: absolute;
-                        pointer-events: none;
+                        top: 0;
+                        left: 0;
                     }
                 </style>
             </head>
             <body>
                 <div class="header">
-                    <h1>Tree Structure</h1>
-                    <p>Interactive visualization of tree nodes and their connections.</p>
+                    <h1>Tree / Graph View</h1>
+                    <p>Hierarchical Layout. Drag to pan, scroll to zoom.</p>
                 </div>
-                <div id="tree"></div>
-                <script type="text/javascript">
-                    const nodes = )" + nodesJson + R"(;
-                    const edges = )" + edgesJson + R"(;
-                    
-                    // Build adjacency map
-                    const childrenMap = new Map();
-                    for (const edge of edges) {
-                        if (!childrenMap.has(edge.from)) {
-                            childrenMap.set(edge.from, []);
-                        }
-                        childrenMap.has(edge.to) || childrenMap.set(edge.to, []);
-                        childrenMap.get(edge.from).push(edge.to);
-                    }
+                
+                <div id="tree-network"></div>
 
-                    // Build tree levels using BFS
-                    const levels = [];
-                    const nodeMap = new Map(nodes.map(n => [n.id, n]));
-                    const visited = new Set();
-                    
-                    if (nodes.length > 0) {
-                        const queue = [[nodes[0].id, 0]];
-                        visited.add(nodes[0].id);
-                        
-                        while (queue.length > 0) {
-                            const [nodeId, level] = queue.shift();
-                            if (!levels[level]) levels[level] = [];
-                            levels[level].push(nodeId);
-                            
-                            const children = childrenMap.get(nodeId) || [];
-                            for (const childId of children) {
-                                if (!visited.has(childId)) {
-                                    visited.add(childId);
-                                    queue.push([childId, level + 1]);
-                                }
+                <script type="text/javascript">
+                    const nodesArray = )" + nodesJson + R"(;
+                    const edgesArray = )" + edgesJson + R"(;
+
+                    const nodes = new vis.DataSet(nodesArray);
+                    const edges = new vis.DataSet(edgesArray);
+
+                    const container = document.getElementById('tree-network');
+                    const data = { nodes: nodes, edges: edges };
+
+                    const options = {
+                        layout: {
+                            hierarchical: {
+                                direction: 'UD',       
+                                sortMethod: 'directed', 
+                                levelSeparation: 120,   
+                                nodeSpacing: 180,       // INCREASED: Gives wider boxes more breathing room
+                                treeSpacing: 200        
+                            }
+                        },
+                        physics: { enabled: false },
+                        interaction: {
+                            dragNodes: true, 
+                            zoomView: true,
+                            dragView: true
+                        },
+                        nodes: {
+                            shape: 'box', // CHANGED: 'box' expands dynamically to fit text
+                            margin: { top: 12, bottom: 12, left: 16, right: 16 }, // Adds inner padding
+                            widthConstraint: { 
+                                maximum: 200 // CRITICAL: Forces text longer than 200px to wrap to a new line
+                            },
+                            font: { 
+                                face: 'Space Grotesk', 
+                                color: '#1b1b1b',
+                                size: 16,
+                                bold: true,
+                                multi: 'html' // Allows you to use <b> or <i> tags in your C++ data if you want!
+                            },
+                            borderWidth: 2,
+                            color: {
+                                background: '#fff7e8',
+                                border: '#2f2f2f',
+                                highlight: { background: '#e07a5f', border: '#1b1b1b' }
+                            },
+                            shadow: { enabled: true, color: 'rgba(0,0,0,0.1)', size: 5, x: 3, y: 3 }
+                        },
+                        edges: {
+                            arrows: { to: { enabled: true, scaleFactor: 0.7 } },
+                            color: { color: '#2f2f2f', highlight: '#e07a5f' },
+                            width: 2,
+                            smooth: {
+                                type: 'cubicBezier',      
+                                forceDirection: 'vertical', 
+                                roundness: 0.5
                             }
                         }
-                    }
+                    };
 
-                    // Render tree
-                    const treeEl = document.getElementById('tree');
-                    const container = document.createElement('div');
-                    container.className = 'tree-container';
-                    treeEl.appendChild(container);
-
-                    for (const level of levels) {
-                        const levelDiv = document.createElement('div');
-                        levelDiv.className = 'tree-level';
-                        
-                        for (const nodeId of level) {
-                            const node = nodeMap.get(nodeId);
-                            const nodeEl = document.createElement('div');
-                            nodeEl.className = 'tree-node';
-                            nodeEl.innerHTML = `<div class="label">Data</div><div class="value">${node.label}</div>`;
-                            nodeEl.title = `Address: ${node.id}`;
-                            levelDiv.appendChild(nodeEl);
-                        }
-                        
-                        container.appendChild(levelDiv);
-                    }
+                    const network = new vis.Network(container, data, options);
                 </script>
             </body>
             </html>
