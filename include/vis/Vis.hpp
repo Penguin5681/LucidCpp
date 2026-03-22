@@ -35,6 +35,24 @@ namespace osdetecter
 namespace vis
 {
     template <typename T>
+    inline std::string sanitizeForJson(const T& rawData) {
+        std::stringstream ss;
+        ss << rawData; // Convert int/float/string into a raw string
+        std::string input = ss.str();
+        std::string output;
+        
+        for (char c : input) {
+            if (c == '\n') output += "\\n";       
+            else if (c == '\"') output += "\\\"";  
+            else if (c == '\\') output += "\\\\";  
+            else if (c == '\r') output += "\\r";   
+            else if (c == '\t') output += "\\t";   
+            else output += c;
+        }
+        return output;
+    }
+
+    template <typename T>
     concept LinearNode = requires(T node) {
         { node.data };
         { node.next } -> std::convertible_to<T*>;
@@ -157,9 +175,8 @@ namespace vis
             T* current = q.front();
             q.pop();
 
-            // FIX 1: Add comma for Nodes
             if (!isFirstNode) nodesJson << ",\n";
-            nodesJson << "  { \"id\": \"" << getNodeAddress(current) << "\", \"label\": \"" << getData(current) << "\" }";
+            nodesJson << "  { \"id\": \"" << getNodeAddress(current) << "\", \"label\": \"" << sanitizeForJson(getData(current)) << "\" }";
             isFirstNode = false;
 
             std::vector<T*> children = getChildren(current);
@@ -168,7 +185,6 @@ namespace vis
                     continue;
                 }
                 
-                // FIX 2: Add comma for Edges
                 if (!isFirstEdge) edgesJson << ",\n";
                 edgesJson << "  { \"from\": \"" << getNodeAddress(current) << "\", \"to\": \"" << getNodeAddress(child) << "\" }";
                 isFirstEdge = false;
