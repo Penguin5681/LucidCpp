@@ -304,7 +304,7 @@ namespace vis
                         canvas.innerHTML += '<rect class="next" width="150" height="100" x="'+(xw*i + 70)+'" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>';
                         canvas.innerHTML += '<text x="'+(xw*i + 105)+'" y="50" font-size="12" fill="white">NEXT</text>';
                         canvas.innerHTML += '<rect class="add" width="105" height="50" rx="10" ry="10" x="'+(xw*i + 100)+'" y="60"  fill="white" stroke="black" stroke-dasharray="2,2" stroke-width="1px"/>';
-                        canvas.innerHTML += '<text x="'+(xw*i + 106)+'" y="88" font-size="12" font-family="monospace" fill="black">'+displayAddr+'</text>';
+                        canvas.innerHTML += '<text x="'+(xw*i + 106)+'" y="88" font-size="11" font-family="monospace" fill="black">'+displayAddr+'</text>';
                         
                         canvas.innerHTML += '<rect class="data" id="node'+i+'" width="70" height="100" x="'+(xw*i + 20)+'" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>';
                         canvas.innerHTML += '<text x="'+(xw*i + 40)+'" y="50" font-size="12" fill="white">DATA</text>';
@@ -328,7 +328,7 @@ namespace vis
                             const startX = 250 * targetIndex + 55;
                             const widthJump = 250 * (nodes.length - 1 - targetIndex) + 100;
 
-                            canvas.innerHTML += '<path d="M'+startX+' 120 v50 h'+widthJump+' v-50 v50 h-'+widthJump+' c20 30 Z" stroke="#e07a5f" fill="none" stroke-opacity="0.9" stroke-width="2" stroke-dasharray="5,5" stroke-linecap="round" stroke-linejoin="round"></path>';
+                            canvas.innerHTML += '<path d="M'+startX+' 120 v50 h'+widthJump+' v-50 v50 h-'+widthJump+' c20 30 Z" stroke="#e07a5f" fill="none" stroke-opacity="0.9" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"></path>';
                             canvas.innerHTML += '<path d="M'+startX+' 120 l-10 10 l20 0 Z" fill="#e07a5f" stroke="#e07a5f" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"></path>';
                         }
                     } 
