@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Render</title>
+    <style>
+        :root {
+            --bg: #f5f2ea;
+            --ink: #1b1b1b;
+            --accent: #e07a5f;
+            --panel: #fff7e8;
+            --border: #2f2f2f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+            background: radial-gradient(1200px 800px at 20% 10%, #fff2d8, var(--bg));
+            color: var(--ink);
+        }
+
+        .header {
+            padding: 20px 24px 8px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            margin: 6px 0 0;
+            font-size: 13px;
+            opacity: 0.75;
+        }
+
+        #list {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 40px 24px 32px;
+            /* Increased top padding to make room for tooltip */
+            overflow-x: auto;
+            min-height: 200px;
+        }
+
+        .container{
+            overflow-x: auto;
+        }
+
+        .node {
+            position: relative;
+            display: flex;
+            grid-template-columns: 1fr 1fr;
+            min-width: 200px;
+            /* Slightly wider to accommodate hex strings */
+            border: 2px solid var(--border);
+            background: var(--panel);
+            box-shadow: 6px 6px 0 #2f2f2f22;
+            transform: translateY(0);
+            transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .node:hover {
+            transform: translateY(-4px);
+            box-shadow: 10px 10px 0 #2f2f2f22;
+        }
+
+        /* NEW: The floating tooltip for the current address */
+        .current-addr {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: var(--ink);
+            color: var(--bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 160ms ease, transform 160ms ease;
+            white-space: nowrap;
+        }
+
+        /* Show tooltip on node hover */
+        .node:hover .current-addr {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .block {
+            padding: 12px 14px;
+            border-right: 2px solid var(--border);
+            min-height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-width: 120px;
+            /* Force a max width so it wraps */
+        }
+
+        .block:last-child {
+            border-right: none;
+        }
+
+        .label {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        .value {
+            margin-top: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            word-break: break-word;
+            /* Prevents massive data from overflowing */
+        }
+
+        .next-value {
+            display: inline-block;
+            padding: 4px 6px;
+            border: 1px dashed var(--border);
+            background: #fff;
+            opacity: 0;
+            font-family: monospace;
+            /* Monospace looks better for hex */
+            font-size: 11px;
+            /* Shrink address text */
+            word-break: break-all;
+            /* CRITICAL: forces the hex string to wrap to the next line */
+            transform: translateY(4px);
+            transition: opacity 140ms ease, transform 140ms ease;
+        }
+
+        .node:hover .next-value {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .arrow {
+            font-size: 20px;
+            color: var(--accent);
+        }
+
+        .tail {
+            font-weight: 600;
+            padding: 10px 14px;
+            border: 2px dashed var(--border);
+            background: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Linked List</h1>
+        <p>Hover a node to reveal its memory address and next pointer.</p>
+    </div>
+    <div class="container" style="padding-top: 100px;">
+        <svg id="canvas" width="120%" height="350px" style="border: 1px #deb5aa solid;" xmlns="http://www.w3.org/2000/svg">
+            <!-- <rect class="data" width="150" height="100" x="70" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>
+                <text x="105" y="50" font-size="12" fill="white">NEXT</text>
+                <rect class="data" width="105" height="50" rx="10" ry="10" x="100" y="60"  fill="white" stroke="black" stroke-dasharray="2,2" stroke-width="1px"/>
+                    <text x="106" y="88" font-size="12"  fill="black">0x5e6057577340</text>
+            <rect class="value" width="70" height="100" x="20" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>
+                <text x="40" y="50" font-size="12" fill="white">DATA</text>
+                <text x="40" y="85" font-size="16" fill="white">1</text> -->
+        </svg>
+    </div>
+    <script type="text/javascript">
+        const nodes = [
+            { "id": "0x5e6057577320", "label": "1" },
+            { "id": "0x5e6057577340", "label": "2" },
+            { "id": "0x5e6057577360", "label": "3" },
+            { "id": "0x5e6057577380", "label": "4" },
+            { "id": "0x5e60575773a0", "label": "5" },
+            { "id": "0x5e60575773c0", "label": "6" },
+            { "id": "0x5e60575773e0", "label": "7" },
+            { "id": "0x5e6057577400", "label": "8" },
+            { "id": "0x5e6057577420", "label": "9" },
+            { "id": "0x5e6057577440", "label": "10" }
+        ];
+        const edges = [
+            { "from": "0x5e6057577320", "to": "0x5e6057577340" },
+            { "from": "0x5e6057577340", "to": "0x5e6057577360" },
+            { "from": "0x5e6057577360", "to": "0x5e6057577380" },
+            { "from": "0x5e6057577380", "to": "0x5e60575773a0" },
+            { "from": "0x5e60575773a0", "to": "0x5e60575773c0" },
+            { "from": "0x5e60575773c0", "to": "0x5e60575773e0" },
+            { "from": "0x5e60575773e0", "to": "0x5e6057577400" },
+            { "from": "0x5e6057577400", "to": "0x5e6057577420" },
+            { "from": "0x5e6057577420", "to": "0x5e6057577440" },
+            { "from": "0x5e6057577440", "to": "0x5e60575773a0" }
+        ];
+
+        const nextMap = new Map();
+        for (const edge of edges) {
+            nextMap.set(edge.from, edge.to);
+        }
+
+        const listEl = document.getElementById('canvas');
+        const xw = 250;
+        canvas.style.width=nodes.length*xw;
+        for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i];
+            const nextAddr = nextMap.get(node.id) || 'NULL';
+
+            canvas.innerHTML += '<rect class="next" width="150" height="100" x="'+(xw*i + 70)+'" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>';
+            canvas.innerHTML += '<text x="'+(xw*i + 105)+'" y="50" font-size="12" fill="white">NEXT</text>';
+            canvas.innerHTML += '<rect class="add" width="105" height="50" rx="10" ry="10" x="'+(xw*i + 100)+'" y="60"  fill="white" stroke="black" stroke-dasharray="2,2" stroke-width="1px"/>';
+            canvas.innerHTML += '<text x="'+(xw*i + 106)+'" y="88" font-size="12"  fill="black">'+nextAddr+'</text>';
+            canvas.innerHTML += '<rect class="data" id="node'+i+'" width="70" height="100" x="'+(xw*i + 20)+'" y="20" rx="20" ry="20" fill="#deb5aa" stroke="white" stroke-width="1px"/>';
+            canvas.innerHTML += '<text x="'+(xw*i + 40)+'" y="50" font-size="12" fill="white">DATA</text>';
+            canvas.innerHTML += '<text x="'+(xw*i + 40)+'" y="85" font-size="16" fill="white">'+(node.label)+'</text></g>';
+
+
+            if (i < nodes.length - 1) {
+                canvas.innerHTML += '<path d="M'+(250*(i+1)+1.883)+' 70 l-7.527 6.235.644.765 9-7.521-9-7.479-.645.764 7.529 6.236h-21.884v1h21.883z"  />';
+            }
+        }
+
+        const lastNode = nodes[nodes.length - 1];
+        const finalTargetAddr = nextMap.get(lastNode.id);
+
+        if (finalTargetAddr) {
+            const targetNode = nodes.find(n => n.id === finalTargetAddr);
+            const targetLabel = targetNode ? targetNode.label : "Unknown";
+
+            const locx = xw* (targetLabel);
+            canvas.innerHTML += '<path d="M'+(250*(targetLabel)-195)+' 120 v50 h'+(250*(nodes.length-(targetLabel))+100)+'  v-50 v50 h-'+(250*(nodes.length-(targetLabel))+100)+' c20 30  Z" stroke="#000000" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"></path>';
+            canvas.innerHTML += '<path d="M'+(250*(targetLabel)-195)+' 120 l-10 10 l20 0  Z" stroke="#000000" stroke-opacity="0.9" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"></path>';
+        } 
+    </script>
+</body>
+
+</html>
