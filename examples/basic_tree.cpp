@@ -5,13 +5,19 @@
 
 struct TreeNode {
     std::string val;
-    TreeNode* left = nullptr;
-    TreeNode* right = nullptr;
+    TreeNode* left;
+    TreeNode* right;
+
+    TreeNode(std::string v, TreeNode* l = nullptr, TreeNode* r = nullptr) 
+        : val(v), left(l), right(r) {}
 };
 
 struct FileNode {
     std::string name;
     std::vector<FileNode*> children;
+
+    FileNode(std::string n, std::vector<FileNode*> c = {}) 
+        : name(n), children(c) {}
 };
 
 TreeNode* buildMassiveTree(int currentDepth, int maxDepth, std::string path) {
