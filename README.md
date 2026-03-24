@@ -1,18 +1,78 @@
-LucidCpp is a lightweight, header-only C++ visualization tool designed for debugging and education. It requires zero changes to your existing codebase—no inheriting from base classes or rewriting your structs. Simply #include the library, pass your head pointer to the engine, and it automatically traverses your linear and non-linear data structures to generate clear, visual graphs of your memory.
+## LucidCpp
 
-## Features
+Header-only C++ data structure visualizer. Generate an HTML view for lists and trees without changing your structs.
 
-- **Header-only**: No compilation or linking required
-- **Zero integration**: Works with existing code without modifications
-- **Automatic traversal**: Intelligently navigates linear and non-linear data structures
-- **Visual output**: Generates clear, easy-to-understand memory graphs
+## Requirements
 
-## Quick Start
+- C++11 or newer
+- A web browser (opens automatically)
+
+## Getting started
+
+1. Copy the folder [include/vis](include/vis) into your project.
+2. Include the header:
+   ```cpp
+   #include "vis/Vis.hpp"
+   ```
+3. Build and run your program.
+
+## Tutorial: visualize a linked list
+
+Define a node type, then call `vis::writeListHTMLFile`.
 
 ```cpp
-#include "lucidcpp.hpp"
+#include "vis/Vis.hpp"
 
-// Pass your data structure head pointer
-MyNode* head = /* ... */;
-lucidcpp::visualize(head);
+struct Node {
+   int data;
+   Node* next;
+};
+
+int main() {
+   Node c{3, nullptr};
+   Node b{2, &c};
+   Node a{1, &b};
+
+   vis::writeListHTMLFile(&a, "list.html");
+   return 0;
+}
 ```
+
+Output: an HTML file is created and opened in your browser.
+
+## Tutorial: visualize a tree
+
+For trees (or graphs), pass lambdas that describe how to read node data and children.
+
+```cpp
+#include "vis/Vis.hpp"
+#include <vector>
+
+struct TreeNode {
+   std::string value;
+   TreeNode* left;
+   TreeNode* right;
+};
+
+int main() {
+   TreeNode c{"C", nullptr, nullptr};
+   TreeNode b{"B", nullptr, nullptr};
+   TreeNode a{"A", &b, &c};
+
+   auto getData = [](TreeNode* n) { return n->value; };
+   auto getChildren = [](TreeNode* n) {
+      std::vector<TreeNode*> kids;
+      if (n->left) kids.push_back(n->left);
+      if (n->right) kids.push_back(n->right);
+      return kids;
+   };
+
+   vis::writeTreeHTMLFile(&a, "tree.html", getData, getChildren);
+   return 0;
+}
+```
+
+## Examples
+
+- Linked list example: [examples/basic_list.cpp](examples/basic_list.cpp)
+- Tree example: [examples/basic_tree.cpp](examples/basic_tree.cpp)
