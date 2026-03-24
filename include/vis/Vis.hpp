@@ -1,4 +1,9 @@
 #pragma once
+/*
+ * Author: Penguin5681
+ * License: MIT
+ * Contact: pranav@theapplicable.in
+ */
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
