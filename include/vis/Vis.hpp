@@ -7,7 +7,12 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <concepts>
+#if __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+    #define VIS_CXX20_SUPPORTED 1
+    #include <concepts>
+#else
+    #define VIS_CXX20_SUPPORTED 0
+#endif
 #include <unordered_set>
 #include <queue>
 
@@ -37,7 +42,7 @@ namespace vis
     template <typename T>
     inline std::string sanitizeForJson(const T& rawData) {
         std::stringstream ss;
-        ss << rawData; // Convert int/float/string into a raw string
+        ss << rawData;
         std::string input = ss.str();
         std::string output;
         
@@ -52,14 +57,31 @@ namespace vis
         return output;
     }
 
+    #if VIS_CXX20_SUPPORTED
     template <typename T>
     concept LinearNode = requires(T node) {
         { node.data };
         { node.next } -> std::convertible_to<T*>;
     };
-    // TODO: Define Binary Tree Node Concept
-    // TODO: Define Generic Tree Node Concept
-    // TODO: Figure out the concept for graphs
+
+    template <LinearNode T>
+	inline void writeListHTMLFile(T *rootNode, const std::string &path)
+	{
+		writeListHTMLFile(rootNode, path, [](T *node) { return node->data; },
+                                          [](T *node) { return node->next; });
+	}
+    #else
+    // C++11/14/17 Universe (SFINAE Fallback)
+    template <typename T>
+    inline auto writeListHTMLFile(T *rootNode, const std::string &path) 
+        -> decltype(rootNode->data, rootNode->next, void()) 
+    {
+        writeListHTMLFile(rootNode, path, 
+            [](T* n) { return n->data; }, 
+            [](T* n) { return n->next; }
+        );
+    }
+    #endif
 
     template <typename T>
 	inline void exploreStructure(T *rootNode)
@@ -532,13 +554,6 @@ namespace vis
         std::system(launchCommand.c_str());
         return;
     }
-
-    template <LinearNode T>
-	inline void writeListHTMLFile(T *rootNode, const std::string &path)
-	{
-		writeListHTMLFile(rootNode, path, [](T *node) { return node->data; },
-                                          [](T *node) { return node->next; });
-	}
 
     template <typename T, typename DataFunc, typename ChildrenFunc>
     inline void writeListHTMLFile(T* rootNode, const std::string &path, DataFunc getData, ChildrenFunc getChildren) 
