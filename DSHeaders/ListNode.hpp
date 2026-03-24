@@ -1,3 +1,8 @@
+/*
+ * Author: Penguin5681
+ * License: MIT
+ * Contact: pranav@theapplicable.in
+ */
 #include <iostream>
 
 class ListNode
