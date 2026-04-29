@@ -16,6 +16,26 @@ Header-only C++ data structure visualizer. Generate an HTML view for lists and t
    ```
 3. Build and run your program.
 
+## Build and run
+
+This project uses CMake. Configure and build from the repo root:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+## Run the examples
+
+After building, run the example binaries from the build folder:
+
+```bash
+./build/examples/basic_list
+./build/examples/basic_tree
+```
+
+Each example writes an HTML file in the repo root and opens it in your default browser.
+
 ## Tutorial: visualize a linked list
 
 Define a node type, then call `vis::writeListHTMLFile`.

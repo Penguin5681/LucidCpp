@@ -368,7 +368,8 @@ namespace vis
                     }
                     * { box-sizing: border-box; }
                     body {
-                        margin: 0;
+                        margin: 0;Back-end development in at least one core stack (Python / Node.js / .NET/C# / PHP/WordPress / C++), RESTful API design & server architecture (OOP, scalable systems), Database engineering (SQL + NoSQL, data modeling, performance, integrity/security), Testing & code quality (test strategy, coverage, refactoring/debugging), Remote collaboration & engineering workflow (Git, distributed communication; CI/CD/containers a plus)
+
                         font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
                         background: radial-gradient(1200px 800px at 20% 10%, #fff2d8, var(--bg));
                         color: var(--ink);
