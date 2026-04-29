@@ -44,6 +44,38 @@ namespace osdetecter
 
 namespace vis
 {
+    namespace detail {
+        template <typename T>
+        inline T get_node_ptr(const T& val) { return val; }
+
+        template <typename T, typename W>
+        inline T get_node_ptr(const std::pair<T, W>& p) { return p.first; }
+
+        template <typename T>
+        inline std::string get_edge_weight(const T& val) { return ""; }
+
+        template <typename T, typename W>
+        inline std::string get_edge_weight(const std::pair<T, W>& p) {
+            std::stringstream ss;
+            ss << p.second;
+            return ss.str();
+        }
+
+        template <typename T>
+        inline std::string get_node_id(T* ptr) {
+            std::stringstream ss;
+            ss << "0x" << std::hex << reinterpret_cast<uintptr_t>(ptr);
+            return ss.str();
+        }
+
+        template <typename T>
+        inline std::string get_node_id(const T& val) {
+            std::stringstream ss;
+            ss << val;
+            return ss.str();
+        }
+    }
+
     template <typename T>
     inline std::string sanitizeForJson(const T& rawData) {
         std::stringstream ss;
@@ -183,15 +215,21 @@ namespace vis
 	}
 
     template <typename T, typename DataFunc, typename ChildrenFunc>
-    inline std::pair<std::string, std::string> getTreeEdgesJson(T* rootNode, DataFunc getData, ChildrenFunc getChildren) {
+    inline std::tuple<std::string, std::string, bool> getTreeEdgesJson(T* rootNode, DataFunc getData, ChildrenFunc getChildren) {
         std::unordered_set<const void*> visitedNodes;
         std::queue<T*> q;
         std::stringstream nodesJson;
         std::stringstream edgesJson;
 
-        nodesJson << "[\n"; edgesJson << "[\n";
+        struct EdgeInfo {
+            std::string from;
+            std::string to;
+            std::string weight;
+        };
+        std::vector<EdgeInfo> all_edges;
+
+        nodesJson << "[\n";
         bool isFirstNode = true;
-        bool isFirstEdge = true;
 
         if (rootNode != nullptr) {
             q.push(rootNode);
@@ -203,18 +241,18 @@ namespace vis
             q.pop();
 
             if (!isFirstNode) nodesJson << ",\n";
-            nodesJson << "  { \"id\": \"" << getNodeAddress(current) << "\", \"label\": \"" << sanitizeForJson(getData(current)) << "\" }";
+            nodesJson << "  { \"id\": \"" << detail::get_node_id(current) << "\", \"label\": \"" << sanitizeForJson(getData(current)) << "\" }";
             isFirstNode = false;
 
-            std::vector<T*> children = getChildren(current);
-            for (T* child : children) {
+            auto children = getChildren(current);
+            for (const auto& child_item : children) {
+                T* child = detail::get_node_ptr(child_item);
                 if (child == nullptr) {
                     continue;
                 }
                 
-                if (!isFirstEdge) edgesJson << ",\n";
-                edgesJson << "  { \"from\": \"" << getNodeAddress(current) << "\", \"to\": \"" << getNodeAddress(child) << "\" }";
-                isFirstEdge = false;
+                std::string weight = detail::get_edge_weight(child_item);
+                all_edges.push_back({detail::get_node_id(current), detail::get_node_id(child), weight});
 
                 if (visitedNodes.find(child) == visitedNodes.end()) {
                     visitedNodes.insert(child);
@@ -222,11 +260,53 @@ namespace vis
                 }
             }
         }
-
         nodesJson << "\n]";
+
+        bool is_undirected = true;
+        if (all_edges.empty()) {
+            is_undirected = false;
+        } else {
+            std::unordered_set<std::string> edge_set;
+            for (const auto& e : all_edges) {
+                edge_set.insert(e.from + "->" + e.to + ":" + e.weight);
+            }
+            for (const auto& e : all_edges) {
+                if (edge_set.find(e.to + "->" + e.from + ":" + e.weight) == edge_set.end()) {
+                    is_undirected = false;
+                    break;
+                }
+            }
+        }
+
+        std::vector<EdgeInfo> final_edges;
+        if (is_undirected) {
+            std::unordered_set<std::string> seen;
+            for (const auto& e : all_edges) {
+                std::string key1 = e.from + "->" + e.to;
+                std::string key2 = e.to + "->" + e.from;
+                if (seen.find(key1) == seen.end() && seen.find(key2) == seen.end()) {
+                    seen.insert(key1);
+                    final_edges.push_back(e);
+                }
+            }
+        } else {
+            final_edges = all_edges;
+        }
+
+        edgesJson << "[\n";
+        bool isFirstEdge = true;
+        for (const auto& e : final_edges) {
+            if (!isFirstEdge) edgesJson << ",\n";
+            edgesJson << "  { \"from\": \"" << e.from << "\", \"to\": \"" << e.to << "\"";
+            if (!e.weight.empty()) {
+                edgesJson << ", \"label\": \"" << sanitizeForJson(e.weight) << "\"";
+            }
+            edgesJson << " }";
+            isFirstEdge = false;
+        }
         edgesJson << "\n]";
         
-        return std::make_pair(nodesJson.str(), edgesJson.str());
+        return std::make_tuple(nodesJson.str(), edgesJson.str(), is_undirected);
     }
 
     template <typename T, typename DataFunc, typename ChildrenFunc>
@@ -248,7 +328,7 @@ namespace vis
                 break;
             }
             if (!isFirstNode) nodesJson << ",\n";
-			nodesJson << "  { \"id\": \"" << getNodeAddress(it) << "\", \"label\": \"" << getData(it) << "\" }";
+			nodesJson << "  { \"id\": \"" << getNodeAddress(it) << "\", \"label\": \"" << sanitizeForJson(getData(it)) << "\" }";
 			isFirstNode = false;
 
 			if (getChildren(it) != nullptr)
@@ -288,7 +368,8 @@ namespace vis
                     }
                     * { box-sizing: border-box; }
                     body {
-                        margin: 0;
+                        margin: 0;Back-end development in at least one core stack (Python / Node.js / .NET/C# / PHP/WordPress / C++), RESTful API design & server architecture (OOP, scalable systems), Database engineering (SQL + NoSQL, data modeling, performance, integrity/security), Testing & code quality (test strategy, coverage, refactoring/debugging), Remote collaboration & engineering workflow (Git, distributed communication; CI/CD/containers a plus)
+
                         font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
                         background: radial-gradient(1200px 800px at 20% 10%, #fff2d8, var(--bg));
                         color: var(--ink);
@@ -383,7 +464,8 @@ namespace vis
 	// NOTE: This will output a .html file containing the renderable content
 	// opened in browser ofc
 
-    inline std::string getTreeHtmlTemplate(const std::string& nodesJson, const std::string& edgesJson) {
+    inline std::string getTreeHtmlTemplate(const std::string& nodesJson, const std::string& edgesJson, bool isUndirected) {
+        std::string arrowsConfig = isUndirected ? "arrows: { to: { enabled: false } }," : "arrows: { to: { enabled: true, scaleFactor: 0.7 } },";
         return R"(
             <!DOCTYPE html>
             <html lang="en">
@@ -494,8 +576,9 @@ namespace vis
                             shadow: { enabled: true, color: 'rgba(0,0,0,0.1)', size: 5, x: 3, y: 3 }
                         },
                         edges: {
-                            arrows: { to: { enabled: true, scaleFactor: 0.7 } },
+                            )" + arrowsConfig + R"(
                             color: { color: '#2f2f2f', highlight: '#e07a5f' },
+                            font: { align: 'top', background: '#fff7e8', strokeWidth: 0 },
                             width: 2,
                             smooth: {
                                 type: 'cubicBezier',      
@@ -512,6 +595,142 @@ namespace vis
         )";
     }
 
+    template <typename GraphType, typename GetNodesFunc, typename DataFunc, typename ChildrenFunc>
+    inline std::tuple<std::string, std::string, bool> getGraphEdgesJson(
+        GraphType& graph, 
+        GetNodesFunc getNodes, 
+        DataFunc getData, 
+        ChildrenFunc getChildren) 
+    {
+        std::stringstream nodesJson;
+        std::stringstream edgesJson;
+
+        struct EdgeInfo {
+            std::string from;
+            std::string to;
+            std::string weight;
+        };
+        std::vector<EdgeInfo> all_edges;
+
+        nodesJson << "[\n";
+        bool isFirstNode = true;
+
+        auto nodes = getNodes(graph);
+        for (const auto& node_item : nodes) {
+            auto current = detail::get_node_ptr(node_item);
+
+            if (!isFirstNode) nodesJson << ",\n";
+            nodesJson << "  { \"id\": \"" << detail::get_node_id(current) << "\", \"label\": \"" << sanitizeForJson(getData(current)) << "\" }";
+            isFirstNode = false;
+
+            auto children = getChildren(current);
+            for (const auto& child_item : children) {
+                auto child = detail::get_node_ptr(child_item);
+                
+                std::string weight = detail::get_edge_weight(child_item);
+                all_edges.push_back({detail::get_node_id(current), detail::get_node_id(child), weight});
+            }
+        }
+        nodesJson << "\n]";
+
+        bool is_undirected = true;
+        if (all_edges.empty()) {
+            is_undirected = false;
+        } else {
+            std::unordered_set<std::string> edge_set;
+            for (const auto& e : all_edges) {
+                edge_set.insert(e.from + "->" + e.to + ":" + e.weight);
+            }
+            for (const auto& e : all_edges) {
+                if (edge_set.find(e.to + "->" + e.from + ":" + e.weight) == edge_set.end()) {
+                    is_undirected = false;
+                    break;
+                }
+            }
+        }
+
+        std::vector<EdgeInfo> final_edges;
+        if (is_undirected) {
+            std::unordered_set<std::string> seen;
+            for (const auto& e : all_edges) {
+                std::string key1 = e.from + "->" + e.to;
+                std::string key2 = e.to + "->" + e.from;
+                if (seen.find(key1) == seen.end() && seen.find(key2) == seen.end()) {
+                    seen.insert(key1);
+                    final_edges.push_back(e);
+                }
+            }
+        } else {
+            final_edges = all_edges;
+        }
+
+        edgesJson << "[\n";
+        bool isFirstEdge = true;
+        for (const auto& e : final_edges) {
+            if (!isFirstEdge) edgesJson << ",\n";
+            edgesJson << "  { \"from\": \"" << e.from << "\", \"to\": \"" << e.to << "\"";
+            if (!e.weight.empty()) {
+                edgesJson << ", \"label\": \"" << sanitizeForJson(e.weight) << "\"";
+            }
+            edgesJson << " }";
+            isFirstEdge = false;
+        }
+        edgesJson << "\n]";
+        
+        return std::make_tuple(nodesJson.str(), edgesJson.str(), is_undirected);
+    }
+
+    template <typename GraphType, typename GetNodesFunc, typename DataFunc, typename ChildrenFunc>
+    inline void writeGraphHTMLFile(
+        GraphType& graph, 
+        const std::string &path,
+        GetNodesFunc getNodes,
+        DataFunc getData,
+        ChildrenFunc getChildren
+    ) 
+    {
+        auto nodesEdgesJson = getGraphEdgesJson(
+            graph, 
+            getNodes,
+            getData,
+            getChildren
+        );
+
+        const std::string& nodesJson = std::get<0>(nodesEdgesJson);
+        const std::string& edgesJson = std::get<1>(nodesEdgesJson);
+        bool isUndirected = std::get<2>(nodesEdgesJson);
+
+        std::string htmlContent = getTreeHtmlTemplate(nodesJson, edgesJson, isUndirected);
+
+        std::ofstream out(path);
+        out << htmlContent;
+        out.close();
+
+        std::cout << "The graph html file has been written to: " << path << std::endl;
+
+        std::string launchCommand = "";
+        int osType = osdetecter::OsType();
+
+        switch (osType) {
+			case 0:
+                launchCommand += "start " + path;
+				break;
+			case 1:
+				launchCommand += "google-chrome " + path;
+				break;
+			case 2:
+                launchCommand += "xdg-open " + path;
+				break;
+			case 3:
+				break;
+			default:
+				break;
+		}
+
+        std::system(launchCommand.c_str());
+        return;
+    }
+
     template <typename T, typename DataFunc, typename ChildrenFunc>
     inline void writeTreeHTMLFile(
         T* rootNode, 
@@ -520,16 +739,17 @@ namespace vis
         ChildrenFunc getChildren
     ) 
     {
-        std::pair<std::string, std::string> nodesEdgesJson = getTreeEdgesJson(
+        auto nodesEdgesJson = getTreeEdgesJson(
             rootNode, 
             getData,
             getChildren
         );
 
-        const std::string& nodesJson = nodesEdgesJson.first;
-        const std::string& edgesJson = nodesEdgesJson.second;
+        const std::string& nodesJson = std::get<0>(nodesEdgesJson);
+        const std::string& edgesJson = std::get<1>(nodesEdgesJson);
+        bool isUndirected = std::get<2>(nodesEdgesJson);
 
-        std::string htmlContent = getTreeHtmlTemplate(nodesJson, edgesJson);
+        std::string htmlContent = getTreeHtmlTemplate(nodesJson, edgesJson, isUndirected);
 
         std::ofstream out(path);
         out << htmlContent;
